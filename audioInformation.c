@@ -5,7 +5,8 @@
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 {
 
-    struct AudioData* audio = (struct AudioData*)userdata;
+    struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)userdata;
+    struct AudioData* audio = &vis_pkg->AudioData_t;
 
     if(audio->currentLength == 0)  
         return;
