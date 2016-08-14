@@ -10,27 +10,28 @@ int main(int argc, char** argv)
 {
 	SDL_Init(SDL_INIT_AUDIO);
 
-	SDL_AudioSpec wavSpec;
-	Uint8* wavStart;
-	Uint32 wavLength;
+	struct Visualizer_Pkg visualizer_pkg_t;
+	SDL_AudioSpec* wavSpec_ptr = &visualizer_pkg_t.wavSpec;
+	Uint8** wavStart_ptr_ptr = &visualizer_pkg_t.AudioData_t.wavStart;
+	Uint32* wavLength_ptr = &visualizer_pkg_t.AudioData_t.wavLength;
 
-	if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
+	if(SDL_LoadWAV(FILE_PATH, wavSpec_ptr, wavStart_ptr_ptr, wavLength_ptr) == NULL)
 	{
 		// TODO: Proper error handling
 	
 		return 1;
 	}
 
-	struct AudioData audio;
-	audio.currentPos = wavStart;
-	audio.currentLength = wavLength;
-	audio.wavStart = wavStart;
-	audio.wavLength = wavLength;
-	wavSpec.callback = MyAudioCallback;
-	wavSpec.userdata = &audio;
+	
+	visualizer_pkg_t.AudioData_t.currentPos = *wavStart_ptr_ptr;
+	visualizer_pkg_t.AudioData_t.currentLength = *wavLength_ptr;
+	visualizer_pkg_t.AudioData_t.wavStart = *wavStart_ptr_ptr;
+	visualizer_pkg_t.AudioData_t.wavLength = *wavLength_ptr;
+	wavSpec_ptr->callback = MyAudioCallback;
+	wavSpec_ptr->userdata = &visualizer_pkg_t;
 
 	
-	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL,
+	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, wavSpec_ptr, NULL,
 			SDL_AUDIO_ALLOW_ANY_CHANGE);
 	if(device == 0)
 	{
@@ -39,20 +40,21 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	struct Visualizer_Pkg visualizer_pkg_t;
-	visualizer_pkg_t.AudioData_t = audio;
-	visualizer_pkg_t.wavSpec = wavSpec;
-	visualizer_pkg_t.device = device;
+	
+	
+	
+
 
 	SDL_PauseAudioDevice(device, 0);
 
 	while(visualizer_pkg_t.AudioData_t.currentLength > 0)
 	{
+		printf("%d\n", visualizer_pkg_t.AudioData_t.currentLength);
 		SDL_Delay(100);
 	}
 
 	SDL_CloseAudioDevice(device);
-	SDL_FreeWAV(wavStart);
+	SDL_FreeWAV(*wavStart_ptr_ptr);
 	SDL_Quit();
 	return 0;
 }
