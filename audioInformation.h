@@ -1,9 +1,9 @@
 #ifndef AUDIOINFORMATION_H
 #define AUDIOINFORMATION_H
 
-
 #include <SDL2/SDL.h>
 #include <fftw3.h>
+#include <stdlib.h>
 
 struct AudioData
 {
@@ -16,23 +16,28 @@ struct AudioData
 
 struct FFTW_Results
 {
-    
+	double* peakfreq;
+    double* peakmag;
+    double** peakmagMatrix;		//peakmagMatrix[channel][bucket]
+    char*** outputMatrix;		//outputMatrix[channel][bucket][outputstring]
+
 };
 
-struct Visualizer_Pkg
+typedef struct Visualizer_Pkg
 {
 	char* filename;
 	short packetIndex;
 
   	SDL_AudioDeviceID device;
-	struct AudioData AudioData_t;
-	SDL_AudioSpec wavSpec;                //SDL data type to analyze WAV file.
+	struct AudioData* AudioData_ptr;
+	SDL_AudioSpec* wavSpec_ptr;                //SDL data type to analyze WAV file.
                                           //A structure that contains the audio output format.
-	struct FFTW_Results* FFTW_Results_t;
+	struct FFTW_Results* FFTW_Results_ptr;
 
 	double (*GetAudioSample)(Uint8* bytebuffer, SDL_AudioFormat format);
 
-};
+}Visualizer_Pkg_t, *Visualizer_Pkg_ptr;
+
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
 

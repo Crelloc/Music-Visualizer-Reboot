@@ -5,9 +5,8 @@
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 {
 
-    struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)userdata;
-    struct AudioData* audio = &vis_pkg->AudioData_t;
-
+    struct AudioData* audio= (struct AudioData*)userdata;
+    
     if(audio->currentLength == 0)  
         return;
        
@@ -37,3 +36,4 @@ double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
 {
 	return 0.0;
 }
+
