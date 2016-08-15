@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 	visualizer_pkg_t.AudioData_t.wavLength = *wavLength_ptr;
 	wavSpec_ptr->callback = MyAudioCallback;
 	wavSpec_ptr->userdata = &visualizer_pkg_t;
-
+	visualizer_pkg_t.AudioData_t.packetIndex = 0;
 	
 	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, wavSpec_ptr, NULL,
 			SDL_AUDIO_ALLOW_ANY_CHANGE);
@@ -40,6 +40,25 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	int whatformat = (int)SDL_AUDIO_BITSIZE(wavSpec_ptr->format);
+
+	switch(whatformat){
+		case 8: 
+				printf("8 bit data samples\n");
+				visualizer_pkg_t.GetAudioSample = Get8bitAudioSample;
+				break;
+		case 16:
+				printf("16 bit data samples\n");
+				visualizer_pkg_t.GetAudioSample = Get16bitAudioSample;
+				break;
+		case 32:
+				visualizer_pkg_t.GetAudioSample = Get32bitAudioSample;
+				printf("32 bit data samples\n");
+				break;
+		default:
+				break;
+
+	}
 	
 	
 	
@@ -49,7 +68,7 @@ int main(int argc, char** argv)
 
 	while(visualizer_pkg_t.AudioData_t.currentLength > 0)
 	{
-		printf("%d\n", visualizer_pkg_t.AudioData_t.currentLength);
+		//printf("%d\n", visualizer_pkg_t.AudioData_t.currentLength);
 		SDL_Delay(100);
 	}
 
