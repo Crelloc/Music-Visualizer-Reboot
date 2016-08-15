@@ -22,3 +22,18 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
    
 
 }
+
+double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format)
+{
+	return 0.0;
+}
+
+double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
+{
+	return 0.0;
+}
+
+double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
+{
+	return 0.0;
+}

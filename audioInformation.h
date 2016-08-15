@@ -21,15 +21,23 @@ struct FFTW_Results
 
 struct Visualizer_Pkg
 {
+	char* filename;
+	short packetIndex;
+
   	SDL_AudioDeviceID device;
 	struct AudioData AudioData_t;
 	SDL_AudioSpec wavSpec;                //SDL data type to analyze WAV file.
                                           //A structure that contains the audio output format.
 	struct FFTW_Results* FFTW_Results_t;
-	char* filename;
+
+	double (*GetAudioSample)(Uint8* bytebuffer, SDL_AudioFormat format);
 
 };
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
+
+double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format);
+double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format);
+double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format);
 
 #endif
