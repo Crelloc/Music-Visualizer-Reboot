@@ -1,6 +1,6 @@
 #include "audioInformation.h"
-#include <SDL2/SDL.h>
-#include <fftw3.h>
+//#include <SDL2/SDL.h>
+
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 {
@@ -22,31 +22,35 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 
 }
 
-double Get8bitAudioSample(Uint8** bytebuffer,SDL_AudioFormat format)
+double Get8bitAudioSample(Uint8** bytebuffer, Uint32* length,SDL_AudioFormat format)
 {
 	
 	return ;
 }
 
-double Get16bitAudioSample(Uint8** bytebuffer, SDL_AudioFormat format)
+double Get16bitAudioSample(Uint8** bytebuffer,  Uint32* length,SDL_AudioFormat format)
 {
-	Uint16* val =  (Uint16*)malloc(sizeof(val));
+	Uint16 val =  0x0;
 
 	if(SDL_AUDIO_ISLITTLEENDIAN(format))
-		*val = (uint16_t)(*bytebuffer)[0] | ((uint16_t)(*bytebuffer)[1] << 8);
+		val = (uint16_t)(*bytebuffer)[0] | ((uint16_t)(*bytebuffer)[1] << 8);
 		
 	
 	else
-		*val = ((uint16_t)(*bytebuffer)[0] << 8) | (uint16_t)(*bytebuffer)[1];
+		val = ((uint16_t)(*bytebuffer)[0] << 8) | (uint16_t)(*bytebuffer)[1];
 		 
 	
 
 	*bytebuffer+=2;
+	*length-=2;
 
-	return;
+	if(SDL_AUDIO_ISSIGNED(format))
+		return ((int16_t)val)/32768.0;
+
+	return val/65535.0;
 }
 
-double Get32bitAudioSample(Uint8** bytebuffer, SDL_AudioFormat format)
+double Get32bitAudioSample(Uint8** bytebuffer,  Uint32* length, SDL_AudioFormat format)
 {
 	return ;
 }

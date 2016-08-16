@@ -8,7 +8,7 @@
 #include "dataprocessing.h"
 
 
-#define FILE_PATH "/home/crelloc/Music/Em-Infinite.wav"
+#define FILE_PATH "/home/crelloc/Music/Classic_Beat.wav"
 
 
 static volatile int keeprunning = 1;
@@ -86,11 +86,13 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioDeviceID device
   //wavLength is the size of audio data in bytes
   Uint32 wavLength = vis_pkg->AudioData_ptr->wavLength;
   int totalpackets= (int)ceil((float)wavLength/sizeof_packet);
+  vis_pkg->total_packets = totalpackets;
 
   //A frame can consist of N channels
   int channels = vis_pkg->wavSpec_ptr->channels;
   int total_frames = samples_per_packet / channels; 
-  
+  vis_pkg->total_frames = total_frames;
+
   //FFTW Results for each packet (4096 samples)
   //
   vis_pkg->FFTW_Results_ptr = (struct FFTW_Results*)malloc(totalpackets * sizeof(struct FFTW_Results)); 
@@ -107,6 +109,8 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioDeviceID device
 
   return sizeof_packet;
 }
+
+
 
 int main(int argc, char** argv)
 {
@@ -141,7 +145,7 @@ int main(int argc, char** argv)
   }
 
   int buffer_size = InitializeVariables(&vis_pkg, device);
-  processWAVFile(wavStart, wavLength, buffer_size, &vis_pkg);
+  processWAVFile(wavLength, buffer_size, &vis_pkg);
 
 
   SDL_PauseAudioDevice(device, 0); //
