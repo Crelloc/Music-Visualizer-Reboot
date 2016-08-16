@@ -22,18 +22,32 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 
 }
 
-double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format)
+double Get8bitAudioSample(Uint8** bytebuffer,SDL_AudioFormat format)
 {
-	return 0.0;
+	
+	return ;
 }
 
-double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
+double Get16bitAudioSample(Uint8** bytebuffer, SDL_AudioFormat format)
 {
-	return 0.0;
+	Uint16* val =  (Uint16*)malloc(sizeof(val));
+
+	if(SDL_AUDIO_ISLITTLEENDIAN(format))
+		*val = (uint16_t)(*bytebuffer)[0] | ((uint16_t)(*bytebuffer)[1] << 8);
+		
+	
+	else
+		*val = ((uint16_t)(*bytebuffer)[0] << 8) | (uint16_t)(*bytebuffer)[1];
+		 
+	
+
+	*bytebuffer+=2;
+
+	return;
 }
 
-double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
+double Get32bitAudioSample(Uint8** bytebuffer, SDL_AudioFormat format)
 {
-	return 0.0;
+	return ;
 }
 
