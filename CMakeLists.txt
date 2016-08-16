@@ -135,8 +135,8 @@ target_link_libraries(${binary_name}
 ## Optimize and dubug enabled if GNU compiler
 	if(CMAKE_COMPILER_IS_GNUCXX)
 		message("Optimize and debug enabled!")
-    		set(CMAKE_CXX_FLAGS "-O2 -g")       
-    
+    	#set(CMAKE_CXX_FLAGS "-O2 -g -std=c99")       
+    	set(CMAKE_C_FLAGS "-O2 -g -std=c99")
 	endif(CMAKE_COMPILER_IS_GNUCXX)
 
 
