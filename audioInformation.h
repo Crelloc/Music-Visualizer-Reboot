@@ -5,6 +5,26 @@
 #include <fftw3.h>
 #include <stdlib.h>
 
+
+struct AudioData;
+struct Visualizer_Pkg;
+struct FFTWop;
+struct FFTW_Results;
+typedef struct Visualizer_Pkg* Visualizer_Pkg_ptr;
+
+
+void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
+
+double Get8bitAudioSample(Uint8* bytebuffer,  SDL_AudioFormat format);
+double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format);
+double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format);
+
+struct AudioData GetAudioData(Visualizer_Pkg_ptr);
+SDL_AudioSpec GetSDL_AudioSpec(Visualizer_Pkg_ptr);
+struct FFTW_Results GetFFTW_Results(Visualizer_Pkg_ptr);
+struct FFTWop GetFFTWop(Visualizer_Pkg_ptr);
+
+
 struct AudioData
 {
 	Uint8* currentPos;
@@ -15,21 +35,21 @@ struct AudioData
 
 struct FFTWop
 {
-    fftw_complex *in;                 //used for channel data before fftw operation
-    fftw_complex *out;                //will contain real and imaginary data for left and right channel after fftw operation.
-    fftw_plan p;                    //fftw_plan is a fftw3 data type that allocates memory for fftw
-                                          //read the '2.3 One-Dimensional DFTs of Real Data' section for more information:
-                                        //http://www.fftw.org/#documentation
-    int index;
-    
+	fftw_complex *in;                 //used for channel data before fftw operation
+	fftw_complex *out;                //will contain real and imaginary data for left and right channel after fftw operation.
+	fftw_plan p;                    //fftw_plan is a fftw3 data type that allocates memory for fftw
+	                                  //read the '2.3 One-Dimensional DFTs of Real Data' section for more information:
+	                                //http://www.fftw.org/#documentation
+	int index;
+
 };
 
 struct FFTW_Results
 {
 	double* peakfreq;
-    double* peakmag;
-    double** peakmagMatrix;		//peakmagMatrix[channel][bucket]
-    char*** outputMatrix;		//outputMatrix[channel][bucket][outputstring]
+	double* peakmag;
+	double** peakmagMatrix;		//peakmagMatrix[channel][bucket]
+	char*** outputMatrix;		//outputMatrix[channel][bucket][outputstring]
 
 };
 
@@ -39,22 +59,17 @@ struct Visualizer_Pkg
 	int total_packets;
 	int total_frames;
   	SDL_AudioDeviceID device;
-	struct AudioData* AudioData_ptr;
 	SDL_AudioSpec* wavSpec_ptr;                //SDL data type to analyze WAV file.
                                           //A structure that contains the audio output format.
+	struct AudioData* AudioData_ptr;
 	struct FFTW_Results* FFTW_Results_ptr;
 	struct FFTWop* fftw_ptr;
-	double (*GetAudioSample)(Uint8** bytebuffer, Uint32* length, SDL_AudioFormat format);
+
+	
+	double (*GetAudioSample)(Uint8*, SDL_AudioFormat);
 
 }; 
 
-typedef struct Visualizer_Pkg *Visualizer_Pkg_ptr;
 
 
-void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
-
-double Get8bitAudioSample(Uint8** bytebuffer, Uint32* length, SDL_AudioFormat format);
-double Get16bitAudioSample(Uint8** bytebuffer,  Uint32* length, SDL_AudioFormat format);
-double Get32bitAudioSample(Uint8** bytebuffer,  Uint32* length, SDL_AudioFormat format);
-
-#endif
+#endif //AUDIOINFORMATION_H
