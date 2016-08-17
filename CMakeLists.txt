@@ -72,7 +72,7 @@ set(MY_HEADER_FILES
 
 	audioInformation.h
 	dataprocessing.h
-
+	#trap.h
 )
 
 set(MY_SOURCE_FILES
@@ -80,7 +80,7 @@ set(MY_SOURCE_FILES
 	visualize.c
 	audioInformation.c
 	dataprocessing.c
-
+	#trap.c
 )
 
 

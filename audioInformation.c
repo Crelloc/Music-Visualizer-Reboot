@@ -1,15 +1,35 @@
 #include "audioInformation.h"
-//#include <SDL2/SDL.h>
 
+extern volatile int keeprunning;
+extern volatile int packet_pos;
+extern volatile int print_spectrum;
+extern const int BUCKETS;
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 {
-
-	struct AudioData* audio= (struct AudioData*)userdata;
+	struct Visualizer_Pkg* package = (struct Visualizer_Pkg*)userdata;
+	struct AudioData* audio= GetAudioData(package);
 
 	if(audio->currentLength == 0)  
 	    return;
-	   
+	
+	if(system("clear") < 0){//handle error
+			
+	}
+
+	for(int c= 0; c< package->wavSpec_ptr->channels; ++c){
+		for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakpower[c]; ++p){
+					
+			putchar('=');
+			fflush(stdout);
+		}
+		putchar('>');
+		fflush(stdout);
+		putchar('\n');
+	}
+		
+	packet_pos++;
+
 	Uint32 length = (Uint32)streamLength;
 	length = (length > audio->currentLength ? audio->currentLength : length);
 
@@ -29,7 +49,8 @@ double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format)
 }
 
 double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
-{
+{	
+
 	Uint16 val =  0x0;
 
 	if(SDL_AUDIO_ISLITTLEENDIAN(format))
@@ -51,22 +72,22 @@ double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
 	return 0.0;
 }
 
-struct AudioData GetAudioData(Visualizer_Pkg_ptr package)
+struct AudioData* GetAudioData(Visualizer_Pkg_ptr package)
 {
-	return *package->AudioData_ptr;
+	return package->AudioData_ptr;
 }
 
-SDL_AudioSpec GetSDL_AudioSpec(Visualizer_Pkg_ptr package)
+SDL_AudioSpec* GetSDL_AudioSpec(Visualizer_Pkg_ptr package)
 {
-	return *package->wavSpec_ptr;
+	return package->wavSpec_ptr;
 }
 
-struct FFTW_Results GetFFTW_Results(Visualizer_Pkg_ptr package)
+struct FFTW_Results* GetFFTW_Results(Visualizer_Pkg_ptr package)
 {
-	return *package->FFTW_Results_ptr;
+	return package->FFTW_Results_ptr;
 }
 
-struct FFTWop GetFFTWop(Visualizer_Pkg_ptr package)
+struct FFTWop* GetFFTWop(Visualizer_Pkg_ptr package)
 {
-	return *package->fftw_ptr;
+	return package->fftw_ptr;
 }
