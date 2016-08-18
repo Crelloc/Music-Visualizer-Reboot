@@ -18,16 +18,44 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 	}
 
 	for(int c= 0; c< package->wavSpec_ptr->channels; ++c){
-		for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakpower[c]; ++p){
-					
-			putchar('=');
-			fflush(stdout);
+		if(package->wavSpec_ptr->channels > 1 && ((c+1)%2 == 0)){
+			for(int b=0; b < BUCKETS; ++b){
+				for(int t=0; t<2; ++t){
+					for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakmagMatrix[c][b]; ++p){
+								
+						putchar('|');
+						//fflush(stdout);
+					}
+					putchar('>');
+					putchar('\n');
+					//fflush(stdout);
+
+				}
+			}
+			
 		}
-		putchar('>');
-		fflush(stdout);
+		else{
+			for(int b=0; b < BUCKETS; ++b){
+				for(int t=0; t<2; ++t){
+					for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakmagMatrix[c][BUCKETS-b-1]; ++p){
+								
+						putchar('|');
+						//fflush(stdout);
+					}
+					putchar('>');
+					putchar('\n');
+					//fflush(stdout);
+
+				}
+			}
+			
+		}
 		putchar('\n');
+		fflush(stdout);
+
 	}
-		
+
+
 	packet_pos++;
 
 	Uint32 length = (Uint32)streamLength;

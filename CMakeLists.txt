@@ -1,12 +1,10 @@
 # CMake entry point.
 
-# For an introduction to CMake, see
-# http://www.cmake.org/cmake/help/cmake_tutorial.html (at least steps 1 and 2)
 
 cmake_minimum_required (VERSION 2.6)
 project (MUSIC_VISUALIZER_REBOOTED)
 
-
+SET(CMAKE_BUILD_TYPE CMAKE_C_FLAGS)
 
 find_library(DFT
 
@@ -72,7 +70,6 @@ set(MY_HEADER_FILES
 
 	audioInformation.h
 	dataprocessing.h
-	#trap.h
 )
 
 set(MY_SOURCE_FILES
@@ -80,7 +77,6 @@ set(MY_SOURCE_FILES
 	visualize.c
 	audioInformation.c
 	dataprocessing.c
-	#trap.c
 )
 
 
@@ -90,8 +86,7 @@ set(MY_SOURCE_FILES
 set(WARNINGS "-Wall -Wextra -Wpedantic -Wformat=2 -Wno-unused-parameter -Wshadow -Wwrite-strings -Wredundant-decls -Wmissing-include-dirs"
 )
 
-##		compile for DEBUGGING: set(CMAKE_BUILD_TYPE Debug)
-
+##		compile for DEBUGGING: 
 ##		NOTE: This works also: set(CMAKE_CXX_FLAGS "-ggdb")
 
 
@@ -111,6 +106,7 @@ set(ALL_LIBS
 	${DFT}
 	${SDL}
 	${THREAD_L}
+	${WARNINGS}
 )
 
 
@@ -133,13 +129,14 @@ target_link_libraries(${binary_name}
 )
 
 ## Optimize and dubug enabled if GNU compiler
-	if(CMAKE_COMPILER_IS_GNUCXX)
+	if(CMAKE_COMPILER_IS_GNUCC)
 		message("Optimize and debug enabled!")
-    	#set(CMAKE_CXX_FLAGS "-O2 -g -std=c99")       
+    	set(CMAKE_CXX_FLAGS "-O2 -g -std=c++11")       
     	set(CMAKE_C_FLAGS "-O2 -g -std=c99")
-	endif(CMAKE_COMPILER_IS_GNUCXX)
+	endif(CMAKE_COMPILER_IS_GNUCC)
 
 
+set(CMAKE_BUILD_TYPE Debug)
 
 
 

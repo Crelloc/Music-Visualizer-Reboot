@@ -8,7 +8,7 @@
 #include "dataprocessing.h"
 
 
-#define FILE_PATH "/home/crelloc/Music/The_Roots-Dont_Say_Nuthin.wav"
+#define FILE_PATH "/home/crelloc/Music/Em-Infinite.wav"
 
 
 volatile int keeprunning = 1;
@@ -158,8 +158,17 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 
 		
 	for (int j = 0; j < totalpackets; ++j){
+		//for peak results
 		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)malloc(channels*sizeof(double));
 		vis_pkg->FFTW_Results_ptr[j].peakpower = (double*)malloc(channels*sizeof(double));
+
+		//for phase
+		//vis_pkg->FFTW_Results_ptr[j].phase = 0.0;
+		//for power spectrum (i.e. a double matrix) of N BUCKETS that represent a frequency range
+		vis_pkg->FFTW_Results_ptr[j].peakmagMatrix = (double**)malloc(channels*sizeof(double));
+		for(int ch = 0; ch < channels ; ++ch){
+			vis_pkg->FFTW_Results_ptr[j].peakmagMatrix[ch] = (double*)malloc(BUCKETS*sizeof(double));
+		}
 
 	}
 	vis_pkg->fftw_ptr = (struct FFTWop*)malloc(channels * sizeof(struct FFTWop));
@@ -225,12 +234,12 @@ int main(int argc, char** argv)
 		//printf ("%d\n",vis_pkg.AudioData_ptr->currentLength);
 		SDL_Delay(100);
 	}
-
-	int res = pthread_cancel(id1);
+	int res;
+	/*int res = pthread_cancel(id1);
 	if (res != 0){
 		perror("Thread cancelation failed");
 		exit(EXIT_FAILURE);
-	}
+	}*/
 	time_to_exit = 1;
 
 	res = pthread_join(id1, NULL);

@@ -2,10 +2,11 @@
 #include <assert.h> 
 #include <math.h>
 
-enum {left, right}; //left and right
-enum {re, im};
+enum {left, right}; //left and right channels
+enum {re, im};	//real and imaginary
 extern volatile int keeprunning;
-
+extern const int BUCKETS;
+const int BINS = 5;
 
 void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer, int bytesRead)
 {	
@@ -65,6 +66,7 @@ void processWAVFile(Uint32 wavLength, int buffer_size, Visualizer_Pkg_ptr vis_pk
 
     	//Skip header information in .WAV file
     	bytesRead = fread(buffer, sizeof buffer[0], filesize-wavLength, wavFile);
+  
 
     	//Reading actual audio data
 	while ((bytesRead = fread(buffer, sizeof buffer[0], buffer_size/sizeof(buffer[0]), 
@@ -105,16 +107,22 @@ void processWAVFile(Uint32 wavLength, int buffer_size, Visualizer_Pkg_ptr vis_pk
 void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,int packet_index, int ch,size_t bytesRead)
 {
 
-	double re, im; 
+	double re, im, phase; 
   	double peakmax = 1.7E-308 ;
  	double peakfreq = 0.0;
   	int max_index = -1;
   	double magnitude;
+  	double* peakmaxArray = (double*)malloc(BUCKETS*sizeof(double));
+  	double nyquist = packet->wavSpec_ptr->freq / 2;
+  	double freq_bin[] = {19.0, 140.0, 400.0, 2600.0, 5200.0, nyquist };
 
  	SDL_AudioSpec* wavSpec = GetSDL_AudioSpec(packet);
 
   	int frames = bytesRead / (wavSpec->channels * packet->bitsize / 8);
   	struct FFTW_Results* results = GetFFTW_Results(packet);
+
+
+  	for(int i=0; i<BUCKETS; ++i) peakmaxArray[i] = 1.7E-308;
 
 	for(int j = 0; j < frames/2; ++j){
 
@@ -122,8 +130,16 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,int p
         	im =  fftwop.out[j][1];
       
        	 	magnitude = sqrt(re*re+im*im);
-        
+        	//phase = atan(im/re);
         	double freq = j * (double)wavSpec->freq / frames;
+
+        	for (int i = 0; i < BUCKETS; ++i){
+	          if((freq>freq_bin[i]) && (freq <=freq_bin[i+1])){
+	            if (magnitude > peakmaxArray[i]){
+	              peakmaxArray[i] = magnitude;
+	            }
+	          }
+	        }
 
         	if(magnitude > peakmax){ 
             		peakmax = magnitude;
@@ -135,8 +151,15 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,int p
 	
 	results[packet_index].peakpower[ch] =  10*(log10(peakmax));
 	results[packet_index].peakfreq[ch] = max_index*(double)wavSpec->freq / frames;
-	
+/*
+	if(phase > results[packet_index].phase)
+		results[packet_index].phase = phase;*/
+	for(int i =0; i< BUCKETS; ++i){
+		results[packet_index].peakmagMatrix[ch][i] =  10*(log10(peakmaxArray[i]));
 
+	}
+
+	free(peakmaxArray);
 }
 
 

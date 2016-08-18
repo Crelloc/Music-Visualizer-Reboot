@@ -21,6 +21,13 @@ SDL_AudioSpec* GetSDL_AudioSpec(Visualizer_Pkg_ptr);
 struct FFTW_Results* GetFFTW_Results(Visualizer_Pkg_ptr);
 struct FFTWop* GetFFTWop(Visualizer_Pkg_ptr);
 
+
+struct SoundInfo
+{
+	char** info;
+
+}*g_SoundInfo_t;
+
 struct AudioData
 {
 	Uint8* currentPos;
@@ -46,7 +53,7 @@ struct FFTW_Results
 	double* peakpower;
 	double** peakmagMatrix;		//peakmagMatrix[channel][bucket]
 	char*** outputMatrix;		//outputMatrix[channel][bucket][outputstring]
-
+	double phase;
 };
 
 struct Visualizer_Pkg
