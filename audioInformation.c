@@ -5,14 +5,10 @@ extern volatile int packet_pos;
 extern volatile int print_spectrum;
 extern const int BUCKETS;
 
-void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
-{
-	struct Visualizer_Pkg* package = (struct Visualizer_Pkg*)userdata;
-	struct AudioData* audio= GetAudioData(package);
 
-	if(audio->currentLength == 0)  
-	    return;
-	
+
+void outputpowerspectrum(Visualizer_Pkg_ptr package){
+
 	if(system("clear") < 0){//handle error
 			
 	}
@@ -57,6 +53,17 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 
 
 	packet_pos++;
+}
+
+void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
+{
+	struct Visualizer_Pkg* package = (struct Visualizer_Pkg*)userdata;
+	struct AudioData* audio= GetAudioData(package);
+
+	if(audio->currentLength == 0)  
+	    return;
+	
+	outputpowerspectrum(package);
 
 	Uint32 length = (Uint32)streamLength;
 	length = (length > audio->currentLength ? audio->currentLength : length);

@@ -11,6 +11,7 @@ struct FFTWop;
 struct FFTW_Results;
 typedef struct Visualizer_Pkg* Visualizer_Pkg_ptr;
 
+void outputpowerspectrum(Visualizer_Pkg_ptr package);
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
 double Get8bitAudioSample(Uint8* bytebuffer,  SDL_AudioFormat format);
 double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format);
