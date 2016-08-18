@@ -4,8 +4,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (MUSIC_VISUALIZER_REBOOTED)
 
-SET(CMAKE_BUILD_TYPE CMAKE_C_FLAGS)
-
 find_library(DFT
 
 	NAMES 
@@ -66,24 +64,31 @@ if(GLU_LIB)
 	message(${GLU_LIB})
 endif(GLU_LIB)
 
-set(MY_HEADER_FILES
+#set(MY_HEADER_FILES
 
-	audioInformation.h
-	dataprocessing.h
-)
+#	includes/audioInformation.h
+#	includes/dataprocessing.h
+#)
 
 set(MY_SOURCE_FILES
 	
-	visualize.c
-	audioInformation.c
-	dataprocessing.c
+	src/visualize.c
+	src/audioInformation.c
+	src/dataprocessing.c
 )
 
+include_directories(
+  # includes
+ )
 
-
+file(GLOB SOURCES *.c)
+file(GLOB INCLUDES *.h)
 ##list command line warnings
 
-set(WARNINGS "-Wall -Wextra -Wpedantic -Wformat=2 -Wno-unused-parameter -Wshadow -Wwrite-strings -Wredundant-decls -Wmissing-include-dirs"
+set(WARNINGS 
+-Wall -Wextra -Wpedantic -Wformat=2
+-Wno-unused-parameter -Wshadow -Wwrite-strings
+-Wredundant-decls -Wmissing-include-dirs
 )
 
 ##		compile for DEBUGGING: 
@@ -121,8 +126,9 @@ set(ALL_LIBS
 set(binary_name "visual.exe")
 
 add_executable(${binary_name}
-	${MY_HEADER_FILES}
-	${MY_SOURCE_FILES}
+	${SOURCES} ${INCLUDES}
+	#${MY_HEADER_FILES}
+	#${MY_SOURCE_FILES}
 )
 target_link_libraries(${binary_name}
 	${ALL_LIBS} 

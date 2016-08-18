@@ -16,41 +16,9 @@ volatile int packet_pos = 0;
 volatile int print_spectrum = 0;
 volatile static int time_to_exit = 0;
 const int BUCKETS = 5;
-pthread_mutex_t work_mutex = PTHREAD_MUTEX_INITIALIZER;         
 
 
 
-
-void* mainthread(void *arg){
-
-
-	struct Visualizer_Pkg package = *((struct Visualizer_Pkg* )arg);
-
-	while(!time_to_exit) {
-	     
-		/*if(print_spectrum){
-
-			if(system("clear") < 0){//handle error
-			
-			}
-			print_spectrum = 0;
-
-			
-			for (int p = 0; p< package.FFTW_Results_ptr[packet_pos].peakpower[0]; ++p){
-				
-					putchar('=');
-					fflush(stdout);
-			}
-			putchar('>');
-			fflush(stdout);
-			packet_pos++;
-		}*/
-		       // while(!Pause && (audio.length > 0) && !time_to_exit){} //gonna be used for opengl 3.x
-
-	}
-
-    pthread_exit(NULL);
-}
 
 void aborted(int sig){
 
@@ -162,8 +130,6 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)malloc(channels*sizeof(double));
 		vis_pkg->FFTW_Results_ptr[j].peakpower = (double*)malloc(channels*sizeof(double));
 
-		//for phase
-		//vis_pkg->FFTW_Results_ptr[j].phase = 0.0;
 		//for power spectrum (i.e. a double matrix) of N BUCKETS that represent a frequency range
 		vis_pkg->FFTW_Results_ptr[j].peakmagMatrix = (double**)malloc(channels*sizeof(double));
 		for(int ch = 0; ch < channels ; ++ch){
@@ -224,30 +190,13 @@ int main(int argc, char** argv)
 
 
 
-	pthread_t id1;
-	pthread_create(&id1, NULL, mainthread, (void *)&vis_pkg);
-
-	SDL_PauseAudioDevice(device, 0); //
+	SDL_PauseAudioDevice(device, 0); //play song
 
 	while((vis_pkg.AudioData_ptr->currentLength > 0) && keeprunning){
 
-		//printf ("%d\n",vis_pkg.AudioData_ptr->currentLength);
 		SDL_Delay(100);
 	}
-	int res;
-	/*int res = pthread_cancel(id1);
-	if (res != 0){
-		perror("Thread cancelation failed");
-		exit(EXIT_FAILURE);
-	}*/
-	time_to_exit = 1;
-
-	res = pthread_join(id1, NULL);
-	if(res != 0){
-		perror("Thread join failed");
-		exit(EXIT_FAILURE);
-	}
-    	pthread_mutex_destroy(&work_mutex);
+	
 
 	SDL_CloseAudioDevice(device);
 	SDL_FreeWAV(wavStart);
