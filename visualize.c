@@ -29,26 +29,30 @@ void aborted(int sig){
 }
 
 
-struct Visualizer_Pkg InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength){
+void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
+							Visualizer_Pkg_ptr* vis_pkg)
+{
 
- 	struct AudioData* AudioData_t = (struct AudioData*)malloc(sizeof(struct AudioData));
+ 	struct AudioData* AudioData_t = (struct AudioData*)
+ 					malloc(sizeof(struct AudioData));
 
 	AudioData_t->currentPos = wavStart;
 	AudioData_t->wavStart = wavStart;
 	AudioData_t->wavLength = wavLength;
 	AudioData_t->currentLength = wavLength;
+
 	wavSpec->callback = MyAudioCallback;
+  	wavSpec->userdata = *vis_pkg;
+
+	
+	(*vis_pkg)->filename = FILE_PATH;
+	(*vis_pkg)->AudioData_ptr = AudioData_t;
+	(*vis_pkg)->wavSpec_ptr = wavSpec;
+	(*vis_pkg)->FFTW_Results_ptr = NULL;
+	(*vis_pkg)->GetAudioSample = NULL;
 
   
-	struct Visualizer_Pkg visualizer_pkg_t = {
-						    .filename = FILE_PATH,
-						    .AudioData_ptr = AudioData_t,
-						    .wavSpec_ptr = wavSpec,
-						    .FFTW_Results_ptr = NULL,
-						    .GetAudioSample = NULL
-						  };
-  
-  return visualizer_pkg_t;
+ 
 }
 
 
@@ -122,18 +126,24 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 	//FFTW Results for each packet (4096 samples)
 	//
 
-	vis_pkg->FFTW_Results_ptr = (struct FFTW_Results*)malloc(totalpackets * sizeof(struct FFTW_Results));
+	vis_pkg->FFTW_Results_ptr = (struct FFTW_Results*)
+			malloc(totalpackets * sizeof(struct FFTW_Results));
 
 		
 	for (int j = 0; j < totalpackets; ++j){
 		//for peak results
-		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)malloc(channels*sizeof(double));
-		vis_pkg->FFTW_Results_ptr[j].peakpower = (double*)malloc(channels*sizeof(double));
+		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)
+					malloc(channels*sizeof(double));
+		vis_pkg->FFTW_Results_ptr[j].peakpower = (double*)
+					malloc(channels*sizeof(double));
 
-		//for power spectrum (i.e. a double matrix) of N BUCKETS that represent a frequency range
-		vis_pkg->FFTW_Results_ptr[j].peakmagMatrix = (double**)malloc(channels*sizeof(double));
+		//for power spectrum (i.e. a double matrix) of 
+			//N BUCKETS that represent a frequency range
+		vis_pkg->FFTW_Results_ptr[j].peakmagMatrix = (double**)
+						malloc(channels*sizeof(double));
 		for(int ch = 0; ch < channels ; ++ch){
-			vis_pkg->FFTW_Results_ptr[j].peakmagMatrix[ch] = (double*)malloc(BUCKETS*sizeof(double));
+			vis_pkg->FFTW_Results_ptr[j].peakmagMatrix[ch] = (double*)
+						malloc(BUCKETS*sizeof(double));
 		}
 
 	}
@@ -141,8 +151,10 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 
 	//allocating space for dft operations
 	for(int i=0; i<channels; ++i){
-		vis_pkg->fftw_ptr[i].in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * total_frames);
-		vis_pkg->fftw_ptr[i].out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * total_frames);
+		vis_pkg->fftw_ptr[i].in = (fftw_complex*) 
+			fftw_malloc(sizeof(fftw_complex) * total_frames);
+		vis_pkg->fftw_ptr[i].out = (fftw_complex*) 
+			fftw_malloc(sizeof(fftw_complex) * total_frames);
 		vis_pkg->fftw_ptr[i].index = i;
 	}
 
@@ -174,8 +186,10 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	struct Visualizer_Pkg vis_pkg = InitializePackage(&wavSpec, wavStart, wavLength);
-	vis_pkg.wavSpec_ptr->userdata = &vis_pkg;
+	struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)
+				malloc(sizeof(struct Visualizer_Pkg));
+	InitializePackage(&wavSpec, wavStart, wavLength, &vis_pkg);
+
 
 	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL,
 		SDL_AUDIO_ALLOW_ANY_CHANGE);
@@ -185,14 +199,14 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	int buffer_size = InitializeVariables(&vis_pkg);
-	processWAVFile(wavLength, buffer_size, &vis_pkg);
+	int buffer_size = InitializeVariables(vis_pkg);
+	processWAVFile(wavLength, buffer_size,vis_pkg);
 
 
 
 	SDL_PauseAudioDevice(device, 0); //play song
 
-	while((vis_pkg.AudioData_ptr->currentLength > 0) && keeprunning){
+	while((vis_pkg->AudioData_ptr->currentLength > 0) && keeprunning){
 
 		SDL_Delay(100);
 	}

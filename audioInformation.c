@@ -12,19 +12,21 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 	if(system("clear") < 0){//handle error
 			
 	}
-
-	for(int c= 0; c< package->wavSpec_ptr->channels; ++c){
-		if(package->wavSpec_ptr->channels > 1 && ((c+1)%2 == 0)){
+	int totchannels = package->wavSpec_ptr->channels;
+	struct FFTW_Results* res= GetFFTW_Results(package);
+	
+	for(int c= 0; c< totchannels; ++c){
+		int energy;
+		if(totchannels > 1 && ((c+1)%2 == 0)){
 			for(int b=0; b < BUCKETS; ++b){
+				energy = res[packet_pos].peakmagMatrix[c][b];
 				for(int t=0; t<2; ++t){
-					for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakmagMatrix[c][b]; ++p){
+					for (int p = 0; p< energy; ++p){
 								
 						putchar('|');
-						//fflush(stdout);
 					}
 					putchar('>');
 					putchar('\n');
-					//fflush(stdout);
 
 				}
 			}
@@ -32,15 +34,14 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 		}
 		else{
 			for(int b=0; b < BUCKETS; ++b){
+				energy = res[packet_pos].peakmagMatrix[c][BUCKETS-b-1];
 				for(int t=0; t<2; ++t){
-					for (int p = 0; p< package->FFTW_Results_ptr[packet_pos].peakmagMatrix[c][BUCKETS-b-1]; ++p){
+					for (int p = 0; p< energy; ++p){
 								
 						putchar('|');
-						//fflush(stdout);
 					}
 					putchar('>');
 					putchar('\n');
-					//fflush(stdout);
 
 				}
 			}

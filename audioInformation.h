@@ -23,27 +23,19 @@ struct FFTW_Results* GetFFTW_Results(Visualizer_Pkg_ptr);
 struct FFTWop* GetFFTWop(Visualizer_Pkg_ptr);
 
 
-struct SoundInfo
-{
-	char** info;
-
-}*g_SoundInfo_t;
-
 struct AudioData
 {
 	Uint8* currentPos;
 	Uint32 currentLength;
-	Uint8* wavStart;                                        //pointer to audio data 
-  	Uint32 wavLength;                                       //length of audio data
+	Uint8* wavStart;                                        
+  	Uint32 wavLength;                                      
 };
 
 struct FFTWop
 {
-	fftw_complex *in;                 //used for channel data before fftw operation
-	fftw_complex *out;                //will contain real and imaginary data for left and right channel after fftw operation.
-	fftw_plan p;                    //fftw_plan is a fftw3 data type that allocates memory for fftw
-	                                  //read the '2.3 One-Dimensional DFTs of Real Data' section for more information:
-	                                //http://www.fftw.org/#documentation
+	fftw_complex *in;                
+	fftw_complex *out;                
+	fftw_plan p;                    
 	int index;
 
 };
@@ -65,8 +57,8 @@ struct Visualizer_Pkg
 	int bitsize;
 
   	SDL_AudioDeviceID device;
-	SDL_AudioSpec* wavSpec_ptr;                //SDL data type to analyze WAV file.
-                                          //A structure that contains the audio output format.
+	SDL_AudioSpec* wavSpec_ptr;       //SDL data type to analyze WAV file.
+                         //A structure that contains the audio output format.
 	struct AudioData* AudioData_ptr;
 	struct FFTW_Results* FFTW_Results_ptr;
 	struct FFTWop* fftw_ptr;
