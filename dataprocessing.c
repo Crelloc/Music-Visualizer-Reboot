@@ -14,13 +14,16 @@ void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 	
-	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, fftwop[left].out,
-						 FFTW_FORWARD, FFTW_MEASURE);
-        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, fftwop[right].out, 
-        					FFTW_FORWARD, FFTW_MEASURE);
+	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
+				fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
+        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, 
+        			fftwop[right].out,FFTW_FORWARD, FFTW_MEASURE);
+
 	//plan dft operation for left and right channels
-	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
-        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, fftwop[right].out, FFTW_FORWARD, FFTW_MEASURE);
+	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
+			fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
+        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in,
+        		 fftwop[right].out, FFTW_FORWARD, FFTW_MEASURE);
 	 
 	int count = 0;
 	while(count < frames){
@@ -73,8 +76,7 @@ void processWAVFile(Uint32 wavLength, int buffer_size,
 
 
     	//Skip header information in .WAV file
-    	bytesRead = fread(buffer, sizeof buffer[0], filesize-wavLength, 
-    								wavFile);
+    	bytesRead = fread(buffer, sizeof buffer[0], filesize-wavLength, wavFile);
   
 
     	//Reading actual audio data
@@ -141,7 +143,6 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
         	im =  fftwop.out[j][1];
       
        	 	magnitude = sqrt(re*re+im*im);
-        	//phase = atan(im/re);
         	double freq = j * (double)wavSpec->freq / frames;
 
         	for (int i = 0; i < BUCKETS; ++i){
@@ -162,9 +163,7 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
 	
 	results[packet_index].peakpower[ch] =  10*(log10(peakmax));
 	results[packet_index].peakfreq[ch] = max_index*(double)wavSpec->freq/frames;
-/*
-	if(phase > results[packet_index].phase)
-		results[packet_index].phase = phase;*/
+
 	for(int i =0; i< BUCKETS; ++i){
 		results[packet_index].peakmagMatrix[ch][i]=10*(log10(peakmaxArray[i]));
 
