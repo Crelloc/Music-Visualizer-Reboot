@@ -14,16 +14,13 @@ void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 	
-<<<<<<< HEAD
-	fftwop[0].p = fftw_plan_dft_1d(frames, fftwop[0].in, fftwop[0].out,
+	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, fftwop[left].out,
 						 FFTW_FORWARD, FFTW_MEASURE);
-        fftwop[1].p = fftw_plan_dft_1d(frames, fftwop[1].in, fftwop[1].out, 
+        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, fftwop[right].out, 
         					FFTW_FORWARD, FFTW_MEASURE);
-=======
 	//plan dft operation for left and right channels
 	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
         fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, fftwop[right].out, FFTW_FORWARD, FFTW_MEASURE);
->>>>>>> b878cbaa6504aab6814c1cb05eb9563fff6951f8
 	 
 	int count = 0;
 	while(count < frames){
