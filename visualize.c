@@ -14,7 +14,7 @@
 volatile int keeprunning = 1;
 volatile int packet_pos = 0;
 volatile int print_spectrum = 0;
-volatile static int time_to_exit = 0;
+static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
 
 
@@ -79,7 +79,7 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 		default:
 		break;
 
-	}
+    }
 
 	vis_pkg->bitsize = bitsize;
 
