@@ -78,7 +78,7 @@ set(MY_SOURCE_FILES
 )
 
 include_directories(
-  # includes
+  include
  )
 
 file(GLOB SOURCES *.c)

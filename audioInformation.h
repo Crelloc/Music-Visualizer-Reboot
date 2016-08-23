@@ -1,7 +1,7 @@
 #ifndef AUDIOINFORMATION_H
 #define AUDIOINFORMATION_H
 
-#include <SDL2/SDL.h>
+#include<SDL2/SDL.h>
 #include <fftw3.h>
 #include <stdlib.h>
 
@@ -54,6 +54,7 @@ struct Visualizer_Pkg
 	char* filename;
 	int total_packets;
 	int total_frames;
+	int frame_size;
 	int bitsize;
 
   	SDL_AudioDeviceID device;

@@ -1,14 +1,17 @@
 #include <stdio.h>
-#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
 #include <math.h>
+#include <assert.h>
+#include <SDL2/SDL.h>
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
 
-#define FILE_PATH "/home/crelloc/Music/The_Roots-Dont_Say_Nuthin.wav"
+
+
+#define FILE_PATH "/home/crelloc/Music/Redman-Bars_converted.wav"
 
 
 volatile int keeprunning = 1;
@@ -57,11 +60,14 @@ void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLengt
 
 
 
-int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
+void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 
-	
+	SDL_AudioSpec* wavSpec = GetSDL_AudioSpec(vis_pkg);
 	//initialize function ptr
-	int bitsize = (int)SDL_AUDIO_BITSIZE(vis_pkg->wavSpec_ptr->format);
+	if(wavSpec->format != have.format)
+		wavSpec->format = have.format;
+	
+	int bitsize = (int)SDL_AUDIO_BITSIZE(wavSpec->format);
 
 	switch(bitsize){
 		case 8: 
@@ -83,11 +89,15 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 
 	vis_pkg->bitsize = bitsize;
 
-	int ch = (int)vis_pkg->wavSpec_ptr->channels;
+	if(wavSpec->channels != have.channels)
+		wavSpec->channels = have.channels;
+	
+	int ch = (int)wavSpec->channels;
 	switch(ch){
+		
 		case 1: 
 			printf("output channels: %d (mono)\n", ch);
-			//vis_pkg->setupDFT =
+			vis_pkg->setupDFT = setupDFTForMono;
 			break;
 		case 2:
 			printf("output channels: %d (stereo)\n", ch);
@@ -106,24 +116,31 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 
 	}
 
-	//1 packet equals 4096 samples
-	int samples_per_packet = vis_pkg->wavSpec_ptr->samples;
+	if(wavSpec->samples != have.samples && ch == 1){
+		printf("original sample size: %d\n"
+		"new sample size: %d\n", wavSpec->samples, have.samples);
+		wavSpec->samples = have.samples;
+	}
 
-	//size of 4096 samples in bytes?
-	int sizeof_packet =  bitsize * samples_per_packet / 8 ;
+	//size of samples in bytes?
+	int sizeof_packet =  bitsize * wavSpec->samples / 8 ;
+	
+// 	assert(sizeof_packet == (int)have.size
+// 		&& "buffer length calculation is equal to SDL's .size calculation"
+// 	);
 
 	//find the total number of packets
 	//wavLength is the size of audio data in bytes
-	Uint32 wavLength = vis_pkg->AudioData_ptr->wavLength;
-	int totalpackets= (int)ceil((float)wavLength/sizeof_packet);
+	struct AudioData* audio = GetAudioData(vis_pkg);
+	
+	int totalpackets= (int)ceil((float)audio->wavLength/sizeof_packet);
 	vis_pkg->total_packets = totalpackets;
 
 	//A frame can consist of N channels
-	int channels = vis_pkg->wavSpec_ptr->channels;
-	int total_frames = samples_per_packet / channels; 
-	vis_pkg->total_frames = total_frames;
-
-	//FFTW Results for each packet (4096 samples)
+	int frame_size = wavSpec->samples / wavSpec->channels; 
+	vis_pkg->frame_size = frame_size;
+	vis_pkg->total_frames = audio->wavLength/(bitsize/8);
+	//FFTW Results for each packet 
 	//
 
 	vis_pkg->FFTW_Results_ptr = (struct FFTW_Results*)
@@ -133,35 +150,39 @@ int InitializeVariables(struct Visualizer_Pkg* vis_pkg){
 	for (int j = 0; j < totalpackets; ++j){
 		//for peak results
 		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)
-					malloc(channels*sizeof(double));
+					malloc(wavSpec->channels*sizeof(double));
 		vis_pkg->FFTW_Results_ptr[j].peakpower = (double*)
-					malloc(channels*sizeof(double));
+					malloc(wavSpec->channels*sizeof(double));
 
 		//for power spectrum (i.e. a double matrix) of 
 			//N BUCKETS that represent a frequency range
 		vis_pkg->FFTW_Results_ptr[j].peakmagMatrix = (double**)
-						malloc(channels*sizeof(double));
-		for(int ch = 0; ch < channels ; ++ch){
+						malloc(wavSpec->channels*sizeof(double));
+		for(int ch = 0; ch < wavSpec->channels ; ++ch){
 			vis_pkg->FFTW_Results_ptr[j].peakmagMatrix[ch] = (double*)
 						malloc(BUCKETS*sizeof(double));
 		}
 
 	}
-	vis_pkg->fftw_ptr = (struct FFTWop*)malloc(channels * sizeof(struct FFTWop));
+	vis_pkg->fftw_ptr = (struct FFTWop*)malloc(wavSpec->channels * sizeof(struct FFTWop));
 
 	//allocating space for dft operations
-	for(int i=0; i<channels; ++i){
+	for(int i=0; i<wavSpec->channels; ++i){
 		vis_pkg->fftw_ptr[i].in = (fftw_complex*) 
-			fftw_malloc(sizeof(fftw_complex) * total_frames);
+			fftw_malloc(sizeof(fftw_complex) * frame_size);
 		vis_pkg->fftw_ptr[i].out = (fftw_complex*) 
-			fftw_malloc(sizeof(fftw_complex) * total_frames);
+			fftw_malloc(sizeof(fftw_complex) * frame_size);
 		vis_pkg->fftw_ptr[i].index = i;
 	}
 
-	printf("sizeofbuffer: %d\n", sizeof_packet);
-	printf("totalframes: %d\n", total_frames);
-
-	return sizeof_packet;
+	printf("buffer size per packet [bytes]: %d\n", sizeof_packet);
+	printf("number of frames per packet: %d\n", frame_size);
+	printf("total frames: %d\n", vis_pkg->total_frames);
+	printf("FILE_PATH: %s\n", vis_pkg->filename);
+	printf("\nPress ENTER to continue:\n");
+	fflush(stdout);
+	while(getchar() != 0xa && keeprunning);
+	
 }
 
 
@@ -174,7 +195,7 @@ int main(int argc, char** argv)
 
 	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
 
-	SDL_AudioSpec wavSpec;
+	SDL_AudioSpec wavSpec, have;
 	Uint8* wavStart;
 	Uint32 wavLength;
 
@@ -191,7 +212,7 @@ int main(int argc, char** argv)
 	InitializePackage(&wavSpec, wavStart, wavLength, &vis_pkg);
 
 
-	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL,
+	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
 		SDL_AUDIO_ALLOW_ANY_CHANGE);
 	
 	if(device == 0)	{
@@ -199,8 +220,8 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	int buffer_size = InitializeVariables(vis_pkg);
-	processWAVFile(wavLength, buffer_size,vis_pkg);
+	InitializeVariables(vis_pkg, have);
+	processWAVFile(wavLength, have.size ,vis_pkg);
 
 
 
@@ -215,7 +236,6 @@ int main(int argc, char** argv)
 	SDL_CloseAudioDevice(device);
 	SDL_FreeWAV(wavStart);
 	SDL_Quit();
-
 	return 0;
 }
 

@@ -50,10 +50,9 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 		putchar('\n');
 		fflush(stdout);
 
-	}
+	}    
 
 
-	packet_pos++;
 }
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
@@ -69,12 +68,13 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 	Uint32 length = (Uint32)streamLength;
 	length = (length > audio->currentLength ? audio->currentLength : length);
 
+
 	SDL_memcpy(stream, audio->currentPos, length);
 
 	audio->currentPos += length;
 	audio->currentLength -= length;
 
-
+        packet_pos++;
 
 }
 

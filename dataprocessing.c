@@ -7,17 +7,40 @@ enum {re, im};	//real and imaginary
 extern volatile int keeprunning;
 extern const int BUCKETS;
 
-void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer, 
-							int bytesRead)
-{	
-	int frames = bytesRead / (2 * vis_pkg_ptr->wavSpec_ptr->channels);
 
+void setupDFTForMono(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
+							int bytesRead)
+{
+	int bytewidth = vis_pkg_ptr->bitsize / 8;
+	int frames = bytesRead / (bytewidth * vis_pkg_ptr->wavSpec_ptr->channels);
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 	
 	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
 				fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
-        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in, 
-        			fftwop[right].out,FFTW_FORWARD, FFTW_MEASURE);
+	
+	int count = 0;
+	while(count < frames){
+
+		fftwop[left].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
+						vis_pkg_ptr->wavSpec_ptr->format);
+		fftwop[left].in[count][im] = 0.0;
+
+		buffer+=bytewidth;
+		count++;
+	}
+
+	assert(count == frames && 
+		"converted the correct amount of bytes.");
+
+	
+	
+}
+void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer, 
+							int bytesRead)
+{	int bytewidth = vis_pkg_ptr->bitsize/8;
+	int frames = bytesRead / (bytewidth * vis_pkg_ptr->wavSpec_ptr->channels);
+
+	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 
 	//plan dft operation for left and right channels
 	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
@@ -32,13 +55,13 @@ void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 						vis_pkg_ptr->wavSpec_ptr->format);
 		fftwop[left].in[count][im] = 0.0;
 
-		buffer+=2;
+		buffer+=bytewidth;
 
 		fftwop[right].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
 						vis_pkg_ptr->wavSpec_ptr->format);
 		fftwop[right].in[count][im] = 0.0;
 
-		buffer+=2;
+		buffer+=bytewidth;
 		count++;
 	}
 
@@ -62,8 +85,6 @@ int getFileSize(FILE *inFile)
 
 void processWAVFile(Uint32 wavLength, int buffer_size, 
 				Visualizer_Pkg_ptr vis_pkg_ptr){
-
-	printf("FILENAME: %s\n", vis_pkg_ptr->filename);
 
 	FILE* wavFile = fopen(vis_pkg_ptr->filename, "r");
     	int filesize = getFileSize(wavFile);
