@@ -142,7 +142,7 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	vis_pkg->total_packets = totalpackets;
 
 	//A frame can consist of N channels
-	int frame_size = sizeof_packet/((bitsize / 8) * wavSpec->channels); 
+	int frame_size = wavSpec->samples; 
 	vis_pkg->frame_size = frame_size;
 	vis_pkg->total_frames = audio->wavLength/((bitsize/8) * wavSpec->channels);
 	//FFTW Results for each packet 
