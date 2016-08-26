@@ -12,7 +12,7 @@ void setupDFTForMono(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 							int bytesRead)
 {
 	int bytewidth = vis_pkg_ptr->bitsize / 8;
-	int frames = bytesRead / (bytewidth * vis_pkg_ptr->wavSpec_ptr->channels);
+	int frames = bytesRead / bytewidth ;
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 	
 	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 

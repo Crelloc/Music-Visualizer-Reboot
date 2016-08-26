@@ -8,11 +8,11 @@ ifeq ($(CC),gcc)
     CFLAGS += -Wjump-misses-init -Wlogical-op
 endif
 
-CFLAGS += -O2 -g -std=c11
+CFLAGS += -O0 -ggdb -std=c99 -fbuiltin -DDEBUG
 
 LDFLAGS = -lm
 
-LDFLAGS += -L/usr/local/lib -lfftw3 -lSDL2
+LDFLAGS += -L/usr/local/lib -lfftw3 /usr/local/lib/libSDL2.so
 
 visual.exe : visualize.o dataprocessing.o audioInformation.o
 	$(CC) -o $@ $^ $(LDFLAGS)

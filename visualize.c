@@ -5,13 +5,16 @@
 #include <math.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include <getopt.h>
+#include <errno.h>  //stderr() && strerror()
+#include <unistd.h> //getopt()
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
 
 
 
-#define FILE_PATH "/home/crelloc/Music/Redman-Bars_converted.wav"
+#define FILE_PATH "/home/crelloc/Music/clubbed_to_death-matrix_soundtrack.wav"
 
 
 volatile int keeprunning = 1;
@@ -116,14 +119,16 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 
 	}
 
-	if(wavSpec->samples != have.samples && ch == 1){
+	if(wavSpec->samples != have.samples ){
 		printf("original sample size: %d\n"
 		"new sample size: %d\n", wavSpec->samples, have.samples);
 		wavSpec->samples = have.samples;
 	}
 
 	//size of samples in bytes?
-	int sizeof_packet =  bitsize * wavSpec->samples / 8 ;
+	int sizeof_packet =  bitsize / 8 ;
+	sizeof_packet *=wavSpec->channels;
+	sizeof_packet *= wavSpec->samples;
 	
 // 	assert(sizeof_packet == (int)have.size
 // 		&& "buffer length calculation is equal to SDL's .size calculation"
@@ -137,9 +142,9 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	vis_pkg->total_packets = totalpackets;
 
 	//A frame can consist of N channels
-	int frame_size = wavSpec->samples / wavSpec->channels; 
+	int frame_size = sizeof_packet/((bitsize / 8) * wavSpec->channels); 
 	vis_pkg->frame_size = frame_size;
-	vis_pkg->total_frames = audio->wavLength/(bitsize/8);
+	vis_pkg->total_frames = audio->wavLength/((bitsize/8) * wavSpec->channels);
 	//FFTW Results for each packet 
 	//
 
