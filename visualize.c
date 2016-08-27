@@ -213,7 +213,13 @@ int main(int argc, char** argv)
 			printf("unknown option: %c\n", optopt);
 			break;	
 		}
-	}	
+	}
+	
+	for(; optind < argc; optind++)
+		printf("argument: %s\n", argv[optind]);
+
+	exit(0);
+		
 	(void) signal(SIGINT, aborted);
 	(void) signal(SIGTSTP, aborted);
 
