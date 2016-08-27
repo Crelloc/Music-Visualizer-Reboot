@@ -64,10 +64,11 @@ usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n", argv[0]);
 	if (optind != argc)
 		goto usage;
 
+
 	(void) signal(SIGINT, aborted);
 	(void) signal(SIGTSTP, aborted);
 
-	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_AudioSpec wavSpec, have;
 	Uint8* wavStart;
