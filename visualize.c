@@ -5,18 +5,14 @@
 #include <math.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
-#include <getopt.h>
-#include <errno.h>  //stderr() && strerror()
-#include <unistd.h> //getopt()
+#include <getopt.h>	//getopt_long()
+#include <errno.h>	//stderr() && strerror()
+#include <unistd.h>	//needed for getopt_long()
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
 
-
-
-//#define FILE_PATH "/home/crelloc/Music/Em-Infinite.wav"
-
-
+/*GLOBAL VARIABLES*/
 volatile int keeprunning = 1;
 volatile int packet_pos = 0;
 volatile int print_spectrum = 0;
@@ -24,8 +20,11 @@ static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
 char* FILE_PATH;
 
+/*FORWARD DECLARATIONS*/
+void InitializePackage(SDL_AudioSpec*, Uint8*, Uint32, Visualizer_Pkg_ptr*);
+void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec);
 
-
+/*TRAP FUNCTION*/
 void aborted(int sig){
 
 	printf("\nAborted by signal: %d\n", sig);
@@ -34,6 +33,85 @@ void aborted(int sig){
 
 }
 
+
+
+int main(int argc, char** argv)
+{
+
+	int opt;
+	struct option longopts[] = {
+		{"file",	1,	NULL,	'f'}, 
+		{0,0,0,0}	
+	};
+
+	while((opt = getopt_long(argc, argv, ":f:", longopts, NULL)) != -1){
+		switch(opt){
+		case 'f':
+			FILE_PATH = optarg;
+			break;
+		case ':':
+			printf("option needs a value\n");
+			goto usage;
+		case '?':
+			printf("unknown option: %c\n", optopt);	
+		
+		default:
+usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n", argv[0]);
+			return 1;
+		}	
+	}
+
+	if (optind != argc)
+		goto usage;
+
+	(void) signal(SIGINT, aborted);
+	(void) signal(SIGTSTP, aborted);
+
+	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+
+	SDL_AudioSpec wavSpec, have;
+	Uint8* wavStart;
+	Uint32 wavLength;
+
+
+	if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
+	{
+		// TODO: Proper error handling
+
+		return 1;
+	}
+
+	struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)
+				malloc(sizeof(struct Visualizer_Pkg));
+	InitializePackage(&wavSpec, wavStart, wavLength, &vis_pkg);
+
+
+	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
+		SDL_AUDIO_ALLOW_ANY_CHANGE);
+	
+	if(device == 0)	{
+	// TODO: Proper error handling
+		return 1;
+	}
+
+	InitializeVariables(vis_pkg, have);
+	processWAVFile(wavLength, have.size ,vis_pkg);
+
+
+
+	SDL_PauseAudioDevice(device, 0); //play song
+
+	while((vis_pkg->AudioData_ptr->currentLength > 0) && keeprunning){
+
+		SDL_Delay(100);
+	}
+	
+
+	SDL_CloseAudioDevice(device);
+	SDL_FreeWAV(wavStart);
+	SDL_Quit();
+	return 0;
+}
 
 void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
 							Visualizer_Pkg_ptr* vis_pkg)
@@ -129,10 +207,6 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	int sizeof_packet =  bitsize / 8 ;
 	sizeof_packet *=wavSpec->channels;
 	sizeof_packet *= wavSpec->samples;
-	
-// 	assert(sizeof_packet == (int)have.size
-// 		&& "buffer length calculation is equal to SDL's .size calculation"
-// 	);
 
 	//find the total number of packets
 	//wavLength is the size of audio data in bytes
@@ -188,85 +262,5 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	fflush(stdout);
 	while(getchar() != 0xa && keeprunning);
 	
-}
-
-
-
-int main(int argc, char** argv)
-{
-
-	int opt;
-	struct option longopts[] = {
-		{"file",	1,	NULL,	'f'}, 
-		{0,0,0,0}	
-	};
-
-	while((opt = getopt_long(argc, argv, ":f:", longopts, NULL)) != -1){
-		switch(opt){
-		case 'f':
-			FILE_PATH = optarg;
-			break;
-		case ':':
-			printf("option needs a value\n");
-			goto usage;
-		case '?':
-			printf("unknown option: %c\n", optopt);	
-		
-		default:
-usage:			printf("usage %s [--file \'PATH/TO/FILE\']\n", argv[0]);
-			return 1;
-		}	
-	}
-
-	if (optind != argc)
-		goto usage;
-
-	(void) signal(SIGINT, aborted);
-	(void) signal(SIGTSTP, aborted);
-
-	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
-
-	SDL_AudioSpec wavSpec, have;
-	Uint8* wavStart;
-	Uint32 wavLength;
-
-
-	if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
-	{
-		// TODO: Proper error handling
-
-		return 1;
-	}
-
-	struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)
-				malloc(sizeof(struct Visualizer_Pkg));
-	InitializePackage(&wavSpec, wavStart, wavLength, &vis_pkg);
-
-
-	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
-		SDL_AUDIO_ALLOW_ANY_CHANGE);
-	
-	if(device == 0)	{
-	// TODO: Proper error handling
-		return 1;
-	}
-
-	InitializeVariables(vis_pkg, have);
-	processWAVFile(wavLength, have.size ,vis_pkg);
-
-
-
-	SDL_PauseAudioDevice(device, 0); //play song
-
-	while((vis_pkg->AudioData_ptr->currentLength > 0) && keeprunning){
-
-		SDL_Delay(100);
-	}
-	
-
-	SDL_CloseAudioDevice(device);
-	SDL_FreeWAV(wavStart);
-	SDL_Quit();
-	return 0;
 }
 

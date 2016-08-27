@@ -12,9 +12,11 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 	if(system("clear") < 0){//handle error
 			
 	}
-	int totchannels = package->wavSpec_ptr->channels;
+
+	int totchannels = GetSDL_AudioSpec(package)->channels;
 	struct FFTW_Results* res= GetFFTW_Results(package);
 	
+	/*PRINT GRID*/
 	for(int c= 0; c< totchannels; ++c){
 		int energy;
 		if(totchannels > 1 && ((c+1)%2 == 0)){
@@ -50,8 +52,21 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 		putchar('\n');
 		fflush(stdout);
 
+		
+
 	}    
 
+	/*OUTPUT REMAINING TIME*/
+	double n_samples = GetAudioData(package)->currentLength;
+	n_samples /= (package->bitsize/8);
+	n_samples /= totchannels;
+
+	double tot_seconds = n_samples / GetSDL_AudioSpec(package)->freq;
+	int minutes = tot_seconds / 60;
+	int seconds = (int)tot_seconds%60;
+
+	printf("\n%02d:%02d\n", minutes, seconds);
+	fflush(stdout);
 
 }
 
