@@ -14,7 +14,7 @@
 
 
 
-#define FILE_PATH "/home/crelloc/Music/clubbed_to_death-matrix_soundtrack.wav"
+//#define FILE_PATH "/home/crelloc/Music/Em-Infinite.wav"
 
 
 volatile int keeprunning = 1;
@@ -22,7 +22,7 @@ volatile int packet_pos = 0;
 volatile int print_spectrum = 0;
 static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
-
+char FILE_PATH[500] = {0};
 
 
 
@@ -195,6 +195,25 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 int main(int argc, char** argv)
 {
 
+	int opt;
+	struct option longopts[] = {
+		{"file",	1,	NULL,	'f'}, 
+		{0,0,0,0}	
+	};
+
+	while((opt = getopt_long(argc, argv, ":f:", longopts, NULL)) != -1){
+		switch(opt){
+		case 'f':
+			FILE_PATH = optarg;
+			break;
+		case ':':
+			printf("option needs a value\n");
+			break;
+		case '?':
+			printf("unknown option: %c\n", optopt);
+			break;	
+		}
+	}	
 	(void) signal(SIGINT, aborted);
 	(void) signal(SIGTSTP, aborted);
 
