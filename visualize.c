@@ -22,7 +22,7 @@ volatile int packet_pos = 0;
 volatile int print_spectrum = 0;
 static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
-char FILE_PATH[500] = {0};
+char* FILE_PATH;
 
 
 
@@ -208,18 +208,19 @@ int main(int argc, char** argv)
 			break;
 		case ':':
 			printf("option needs a value\n");
-			break;
+			goto usage;
 		case '?':
-			printf("unknown option: %c\n", optopt);
-			break;	
-		}
-	}
-	
-	for(; optind < argc; optind++)
-		printf("argument: %s\n", argv[optind]);
-
-	exit(0);
+			printf("unknown option: %c\n", optopt);	
 		
+		default:
+usage:			printf("usage %s [--file \'PATH/TO/FILE\']\n", argv[0]);
+			return 1;
+		}	
+	}
+
+	if (optind != argc)
+		goto usage;
+
 	(void) signal(SIGINT, aborted);
 	(void) signal(SIGTSTP, aborted);
 
