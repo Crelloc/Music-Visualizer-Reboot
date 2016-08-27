@@ -56,7 +56,9 @@ int main(int argc, char** argv)
 			printf("unknown option: %c\n", optopt);	
 		
 		default:
-usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n", argv[0]);
+usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n" 
+				,argv[0]
+			);
 			return 1;
 		}	
 	}
