@@ -174,24 +174,24 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	if(wavSpec->channels != have.channels)
 		wavSpec->channels = have.channels;
 	
-	int ch = (int)wavSpec->channels;
-	switch(ch){
+	int c = (int)wavSpec->channels;
+	switch(c){
 		
 		case 1: 
-			printf("output channels: %d (mono)\n", ch);
+			printf("output channels: %d (mono)\n", c);
 			vis_pkg->setupDFT = setupDFTForMono;
 			break;
 		case 2:
-			printf("output channels: %d (stereo)\n", ch);
+			printf("output channels: %d (stereo)\n", c);
 			vis_pkg->setupDFT = setupDFTForStereo;
 			break;
 		case 4:
 			//vis_pkg->setupDFT =
-			printf("output channels: %d (quad)\n", ch);
+			printf("output channels: %d (quad)\n", c);
 			break;
 		case 6:
 			//vis_pkg->setupDFT =
-			printf("output channels: %d (5.1)\n", ch);
+			printf("output channels: %d (5.1)\n", c);
 			break;
 		default:
 			break;

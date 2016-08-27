@@ -141,9 +141,8 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
 					int packet_index, int ch,size_t bytesRead)
 {
 
-	double re, im, phase; 
+	double real, imag; 
   	double peakmax = 1.7E-308 ;
- 	double peakfreq = 0.0;
   	int max_index = -1;
   	double magnitude;
   	double* peakmaxArray = (double*)malloc(BUCKETS*sizeof(double));
@@ -160,10 +159,10 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
 
 	for(int j = 0; j < frames/2; ++j){
 
-		re =  fftwop.out[j][0];
-        	im =  fftwop.out[j][1];
+			real =  fftwop.out[j][0];
+        	imag =  fftwop.out[j][1];
       
-       	 	magnitude = sqrt(re*re+im*im);
+       	 	magnitude = sqrt(real*real+imag*imag);
         	double freq = j * (double)wavSpec->freq / frames;
 
         	for (int i = 0; i < BUCKETS; ++i){
