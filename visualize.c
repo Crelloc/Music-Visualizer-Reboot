@@ -1,13 +1,14 @@
-#include <stdio.h>
+#include <unistd.h>		//needed for getopt_long()
 #include <stdlib.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 #include <math.h>
+#include <string.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
-#include <getopt.h>	//getopt_long()
-#include <errno.h>	//stderr() && strerror()
-#include <unistd.h>	//needed for getopt_long()
+#include <getopt.h>		//getopt_long()
+#include <errno.h>		//stderr() && strerror()
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
@@ -23,7 +24,9 @@ char* FILE_PATH;
 /*FORWARD DECLARATIONS*/
 void InitializePackage(SDL_AudioSpec*, Uint8*, Uint32, Visualizer_Pkg_ptr*);
 void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec);
-
+int isFileMP3(void);
+extern FILE *popen( const char *command, const char *modes);
+extern int pclose(FILE *stream);
 /*TRAP FUNCTION*/
 void aborted(int sig){
 
@@ -65,6 +68,14 @@ usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n"
 
 	if (optind != argc)
 		goto usage;
+
+
+	int flag = isFileMP3();
+
+	if(flag == 1)
+		printf("\nNew FILE_PATH: %s\n", FILE_PATH);
+	else if(flag == 0)
+		return 0;
 
 
 	(void) signal(SIGINT, aborted);
@@ -114,6 +125,49 @@ usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n"
 	SDL_FreeWAV(wavStart);
 	SDL_Quit();
 	return 0;
+}
+
+int isFileMP3(void)
+{
+	FILE *fp;
+	int status;
+	char buffer[1024] = {0};
+	static char filename[1024] = {0};
+	snprintf(buffer, 1024, "find %s -printf \"%%f\"", FILE_PATH);
+	fp = popen(buffer, "r");
+	if(fp == NULL){
+		printf("Failed to run command\n");
+		return 2;
+	}
+	if(fgets(filename, sizeof(buffer), fp) == NULL){
+		//handle error
+	}
+	printf("%s\n", filename);
+	if(strstr(filename, ".mp3") != NULL){
+		int len = strlen(filename);
+		filename[len-3] = 'w';
+		filename[len-2] = 'a';
+		filename[len-1] = 'v';
+		printf("%s\n", filename);
+		snprintf(buffer, 1024, "avconv -i %s -f wav %s",
+			FILE_PATH, filename);
+		printf("%s\n", buffer);
+		if(system(buffer) < 0){}
+		fp = popen("echo $?","r");
+		if(fgets(buffer, sizeof(buffer), fp) == NULL){}
+		sscanf(buffer, "%d", &status);
+		pclose(fp);
+		if(status == 0){
+			FILE_PATH = filename;
+			return 1;
+		}
+		else{
+			printf("Error converting file\n");
+			return 0;
+		}
+		
+	}
+	return -1;
 }
 
 void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
