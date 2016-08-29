@@ -1,4 +1,5 @@
 CC = gcc
+CFLAGS=`pkg-config --cflags fftw3 sdl2`
 CFLAGS += -Wall -Wextra -Wpedantic \
           -Wformat=2 -Wno-unused-parameter -Wshadow \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
@@ -8,23 +9,22 @@ ifeq ($(CC),gcc)
     CFLAGS += -Wjump-misses-init -Wlogical-op
 endif
 
-CFLAGS += -O0 -ggdb -std=c99 -fbuiltin -DDEBUG
+CFLAGS += -O0 -ggdb -std=c99 -fbuiltin
 
-LDFLAGS = -lm
-
-LDFLAGS += -L/usr/local/lib -lfftw3 /usr/local/lib/libSDL2.so
+LDFLAGS=`pkg-config --libs fftw3 sdl2`
+LDFLAGS += -lm
 
 visual.exe : visualize.o dataprocessing.o audioInformation.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 visualize.o : visualize.c dataprocessing.h audioInformation.h
-	$(CC) $(CFLAGS) -c visualize.c  
+	$(CC) $(CFLAGS) -c $*.c  
 
 dataprocessing.o : dataprocessing.c dataprocessing.h
-	$(CC) $(CFLAGS) -c dataprocessing.c 
+	$(CC) $(CFLAGS) -c $*.c 
 
 audioInformation.o: audioInformation.c audioInformation.h
-	$(CC) $(CFLAGS) -c audioInformation.c  
+	$(CC) $(CFLAGS) -c $<  
 
 clean:
 	rm -rf *.o visual.exe
