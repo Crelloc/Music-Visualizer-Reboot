@@ -1,4 +1,4 @@
-#include <unistd.h>		//needed for getopt_long()
+#include <unistd.h>		
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -7,8 +7,8 @@
 #include <string.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
-#include <getopt.h>		//getopt_long()
-#include <errno.h>		//stderr() && strerror()
+#include <getopt.h>		
+#include <errno.h>		
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
@@ -27,6 +27,7 @@ void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec);
 int isFileMP3(void);
 extern FILE *popen( const char *command, const char *modes);
 extern int pclose(FILE *stream);
+
 /*TRAP FUNCTION*/
 void aborted(int sig){
 
@@ -35,8 +36,6 @@ void aborted(int sig){
 
 
 }
-
-
 
 int main(int argc, char** argv)
 {
@@ -65,10 +64,8 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 			return 1;
 		}	
 	}
-
 	if (optind != argc)
 		goto usage;
-
 
 	int flag = isFileMP3();
 
@@ -77,16 +74,13 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 	else if(flag == 0)
 		return 0;
 
-
 	(void) signal(SIGINT, aborted);
 	(void) signal(SIGTSTP, aborted);
-
 	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_AudioSpec wavSpec, have;
 	Uint8* wavStart;
 	Uint32 wavLength;
-
 
 	if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
 	{
@@ -111,16 +105,14 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 	InitializeVariables(vis_pkg, have);
 	processWAVFile(wavLength, have.size ,vis_pkg);
 
-
-
 	SDL_PauseAudioDevice(device, 0); //play song
+	int length = GetAudioData(vis_pkg)->currentLength;
 
-	while((vis_pkg->AudioData_ptr->currentLength > 0) && keeprunning){
+	while(length > 0 && keeprunning){
 
 		SDL_Delay(100);
 	}
 	
-
 	SDL_CloseAudioDevice(device);
 	SDL_FreeWAV(wavStart);
 	SDL_Quit();
@@ -190,12 +182,7 @@ void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLengt
 	vis_pkg->wavSpec_ptr = wavSpec;
 	vis_pkg->FFTW_Results_ptr = NULL;
 	vis_pkg->GetAudioSample = NULL;
-
-  
- 
 }
-
-
 
 void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 
@@ -221,36 +208,13 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 			break;
 		default:
 		break;
-
-    }
-
+    	}
 
 	if(wavSpec->channels != have.channels)
 		wavSpec->channels = have.channels;
+
+	vis_pkg->setupDFT = setupDFTForSound;
 	
-	switch(wavSpec->channels){
-		
-		case 1: 
-			printf("output channels: %d (mono)\n", wavSpec->channels);
-			vis_pkg->setupDFT = setupDFTForMono;
-			break;
-		case 2:
-			printf("output channels: %d (stereo)\n", wavSpec->channels);
-			vis_pkg->setupDFT = setupDFTForStereo;
-			break;
-		case 4:
-			//vis_pkg->setupDFT =
-			printf("output channels: %d (quad)\n", wavSpec->channels);
-			break;
-		case 6:
-			//vis_pkg->setupDFT =
-			printf("output channels: %d (5.1)\n", wavSpec->channels);
-			break;
-		default:
-			break;
-
-	}
-
 	if(wavSpec->samples != have.samples ){
 		printf("original sample size: %d\n"
 		"new sample size: %d\n", wavSpec->samples, have.samples);
@@ -272,14 +236,14 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	//A frame can consist of N channels
 	int frame_size = wavSpec->samples; 
 	vis_pkg->frame_size = frame_size;
-	vis_pkg->total_frames = audio->wavLength/((vis_pkg->bitsize/8) * wavSpec->channels);
+	vis_pkg->total_frames = audio->wavLength;
+	vis_pkg->total_frames /= ((vis_pkg->bitsize/8) * wavSpec->channels);
 	//FFTW Results for each packet 
 	//
 
 	vis_pkg->FFTW_Results_ptr = (struct FFTW_Results*)
 			malloc(totalpackets * sizeof(struct FFTW_Results));
 
-		
 	for (int j = 0; j < totalpackets; ++j){
 		//for peak results
 		vis_pkg->FFTW_Results_ptr[j].peakfreq = (double*)
@@ -297,7 +261,8 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 		}
 
 	}
-	vis_pkg->fftw_ptr = (struct FFTWop*)malloc(wavSpec->channels * sizeof(struct FFTWop));
+	vis_pkg->fftw_ptr = (struct FFTWop*)
+		malloc(wavSpec->channels*sizeof(struct FFTWop));
 
 	//allocating space for dft operations
 	for(int i=0; i<wavSpec->channels; ++i){
@@ -315,6 +280,4 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	printf("\nPress ENTER to continue:\n");
 	fflush(stdout);
 	while(getchar() != 0xa && keeprunning);
-	
 }
-

@@ -2,74 +2,36 @@
 #include <assert.h> 
 #include <math.h>
 
-enum {left, right}; //left and right channels
 enum {re, im};	//real and imaginary
 extern volatile int keeprunning;
 extern const int BUCKETS;
 
 
-void setupDFTForMono(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
+void setupDFTForSound(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 							int bytesRead)
 {
 	int bytewidth = vis_pkg_ptr->bitsize / 8;
-	int frames = bytesRead / bytewidth ;
+	int channels = GetSDL_AudioSpec(vis_pkg_ptr)->channels;
+	int frames = bytesRead / (bytewidth * channels);
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
-	
-	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
-				fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
+
+	for(int c=0; c< channels; ++c){
+		fftwop[c].p = fftw_plan_dft_1d(frames, fftwop[c].in, 
+				fftwop[c].out, FFTW_FORWARD, FFTW_MEASURE);
+	}
 	
 	int count = 0;
 	while(count < frames){
+		for(int c=0; c< channels; ++c){
+			fftwop[c].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
+				vis_pkg_ptr->wavSpec_ptr->format);
+			fftwop[c].in[count][im] = 0.0;
 
-		fftwop[left].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
-						vis_pkg_ptr->wavSpec_ptr->format);
-		fftwop[left].in[count][im] = 0.0;
-
-		buffer+=bytewidth;
+			buffer+=bytewidth;
+		}
 		count++;
 	}
-
-	assert(count == frames && 
-		"converted the correct amount of bytes.");
-
-	
-	
 }
-void setupDFTForStereo(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer, 
-							int bytesRead)
-{	int bytewidth = vis_pkg_ptr->bitsize/8;
-	int frames = bytesRead / (bytewidth * vis_pkg_ptr->wavSpec_ptr->channels);
-
-	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
-
-	//plan dft operation for left and right channels
-	fftwop[left].p = fftw_plan_dft_1d(frames, fftwop[left].in, 
-			fftwop[left].out, FFTW_FORWARD, FFTW_MEASURE);
-        fftwop[right].p = fftw_plan_dft_1d(frames, fftwop[right].in,
-        		 fftwop[right].out, FFTW_FORWARD, FFTW_MEASURE);
-	 
-	int count = 0;
-	while(count < frames){
-
-		fftwop[left].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
-						vis_pkg_ptr->wavSpec_ptr->format);
-		fftwop[left].in[count][im] = 0.0;
-
-		buffer+=bytewidth;
-
-		fftwop[right].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
-						vis_pkg_ptr->wavSpec_ptr->format);
-		fftwop[right].in[count][im] = 0.0;
-
-		buffer+=bytewidth;
-		count++;
-	}
-
-	assert(count == frames && 
-		"converted the correct amount of bytes.");
-
-}
-
 
 int getFileSize(FILE *inFile)
 {
@@ -84,7 +46,8 @@ int getFileSize(FILE *inFile)
 }
 
 void processWAVFile(Uint32 wavLength, int buffer_size, 
-				Visualizer_Pkg_ptr vis_pkg_ptr){
+				Visualizer_Pkg_ptr vis_pkg_ptr)
+{
 
 	FILE* wavFile = fopen(vis_pkg_ptr->filename, "r");
     	int filesize = getFileSize(wavFile);
@@ -94,12 +57,9 @@ void processWAVFile(Uint32 wavLength, int buffer_size,
     	size_t bytesRead;
     	int packet_index = 0;
 
-
-
     	//Skip header information in .WAV file
     	bytesRead = fread(buffer, sizeof buffer[0], filesize-wavLength, wavFile);
   
-
     	//Reading actual audio data
 	while ((bytesRead = fread(buffer, sizeof buffer[0], 
 		buffer_size/sizeof(buffer[0]), wavFile)) > 0 && keeprunning){
@@ -111,15 +71,11 @@ void processWAVFile(Uint32 wavLength, int buffer_size,
 			analyze_FFTW_Results(vis_pkg_ptr, GetFFTWop(vis_pkg_ptr)[i], 
 							packet_index, i ,bytesRead);
 			fftw_destroy_plan(vis_pkg_ptr->fftw_ptr[i].p);
-
-
 		}
 		packet_index++;		
 	} 
-	assert(packet_index == vis_pkg_ptr->total_packets &&
-		"correct number of packets analyzed");
 
-		
+	/*MEMORY MANAGEMENT*/
 	free(buffer);
 	for(int i=0; i<vis_pkg_ptr->wavSpec_ptr->channels; ++i){
 
@@ -127,12 +83,9 @@ void processWAVFile(Uint32 wavLength, int buffer_size,
 		free(vis_pkg_ptr->fftw_ptr[i].out);
 
 	}
-	
 	free(vis_pkg_ptr->fftw_ptr);
 	buffer = NULL;
 	vis_pkg_ptr->fftw_ptr = NULL;
-
-
 
 	fclose(wavFile);
 }
@@ -159,7 +112,7 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
 
 	for(int j = 0; j < frames/2; ++j){
 
-			real =  fftwop.out[j][0];
+		real =  fftwop.out[j][0];
         	imag =  fftwop.out[j][1];
       
        	 	magnitude = sqrt(real*real+imag*imag);
@@ -177,9 +130,7 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
             		peakmax = magnitude;
             		max_index = j;
         	}
-		
 	}
-
 	
 	results[packet_index].peakpower[ch] =  10*(log10(peakmax));
 	results[packet_index].peakfreq[ch] = max_index*(double)wavSpec->freq/frames;
@@ -191,6 +142,3 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
 
 	free(peakmaxArray);
 }
-
-
-	

@@ -6,9 +6,8 @@ extern volatile int print_spectrum;
 extern const int BUCKETS;
 
 
-
-void outputpowerspectrum(Visualizer_Pkg_ptr package){
-
+void outputpowerspectrum(Visualizer_Pkg_ptr package)
+{
 	int totchannels = GetSDL_AudioSpec(package)->channels;
 	struct FFTW_Results* res= GetFFTW_Results(package);
 	int thickness = 2;
@@ -18,30 +17,17 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 
 	for(int c= 0; c< totchannels; ++c){
 		int energy;
-		if(totchannels > 1 && ((c+1)%2 == 0)){
-			for(int b=0; b < BUCKETS; ++b){
+		for(int b=0; b < BUCKETS; ++b){
+			if((c+1)%2 == 0)
 				energy = res[packet_pos].peakmagMatrix[c][b];
-				for(int t=0; t<thickness; ++t){
-					for (int p = 0; p< energy; ++p){
-								
-						putchar('|');
-					}
-					putchar('>');
-					putchar('\n');
-				}
-			}
-		}
-		else{
-			for(int b=0; b < BUCKETS; ++b){
+			else
 				energy = res[packet_pos].peakmagMatrix[c][BUCKETS-b-1];
-				for(int t=0; t<thickness; ++t){
-					for (int p = 0; p< energy; ++p){
-								
-						putchar('|');
-					}
-					putchar('>');
-					putchar('\n');
-				}
+			for(int t=0; t<thickness; ++t){
+				for (int p = 0; p< energy; ++p)
+					putchar('|');
+				
+				putchar('>');
+				putchar('\n');
 			}
 		}
 		putchar('\n');
@@ -59,7 +45,6 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package){
 
 	printf("\n%02d:%02d\n", minutes, seconds);
 	fflush(stdout);
-
 }
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
@@ -81,7 +66,6 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 	audio->currentLength -= length;
 
         packet_pos++;
-
 }
 
 double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format)
