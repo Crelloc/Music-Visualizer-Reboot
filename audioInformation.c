@@ -9,51 +9,43 @@ extern const int BUCKETS;
 
 void outputpowerspectrum(Visualizer_Pkg_ptr package){
 
-	if(system("clear") < 0){//handle error
-			
-	}
-
 	int totchannels = GetSDL_AudioSpec(package)->channels;
 	struct FFTW_Results* res= GetFFTW_Results(package);
-	
+	int thickness = 2;
+
 	/*PRINT GRID*/
+	if(system("clear") < 0){}
+
 	for(int c= 0; c< totchannels; ++c){
 		int energy;
 		if(totchannels > 1 && ((c+1)%2 == 0)){
 			for(int b=0; b < BUCKETS; ++b){
 				energy = res[packet_pos].peakmagMatrix[c][b];
-				for(int t=0; t<2; ++t){
+				for(int t=0; t<thickness; ++t){
 					for (int p = 0; p< energy; ++p){
 								
 						putchar('|');
 					}
 					putchar('>');
 					putchar('\n');
-
 				}
 			}
-			
 		}
 		else{
 			for(int b=0; b < BUCKETS; ++b){
 				energy = res[packet_pos].peakmagMatrix[c][BUCKETS-b-1];
-				for(int t=0; t<2; ++t){
+				for(int t=0; t<thickness; ++t){
 					for (int p = 0; p< energy; ++p){
 								
 						putchar('|');
 					}
 					putchar('>');
 					putchar('\n');
-
 				}
 			}
-			
 		}
 		putchar('\n');
 		fflush(stdout);
-
-		
-
 	}    
 
 	/*OUTPUT REMAINING TIME*/
@@ -82,7 +74,6 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 
 	Uint32 length = (Uint32)streamLength;
 	length = (length > audio->currentLength ? audio->currentLength : length);
-
 
 	SDL_memcpy(stream, audio->currentPos, length);
 

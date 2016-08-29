@@ -22,7 +22,7 @@ const int BUCKETS = 5;
 char* FILE_PATH;
 
 /*FORWARD DECLARATIONS*/
-void InitializePackage(SDL_AudioSpec*, Uint8*, Uint32, Visualizer_Pkg_ptr*);
+void InitializePackage(SDL_AudioSpec*, Uint8*, Uint32, Visualizer_Pkg_ptr);
 void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec);
 int isFileMP3(void);
 extern FILE *popen( const char *command, const char *modes);
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 			printf("unknown option: %c\n", optopt);	
 		
 		default:
-usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n" 
+usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n" 
 				,argv[0]
 			);
 			return 1;
@@ -97,7 +97,7 @@ usage:			printf("usage %s [--file|-f \'PATH/TO/FILE\']\n"
 
 	struct Visualizer_Pkg* vis_pkg = (struct Visualizer_Pkg*)
 				malloc(sizeof(struct Visualizer_Pkg));
-	InitializePackage(&wavSpec, wavStart, wavLength, &vis_pkg);
+	InitializePackage(&wavSpec, wavStart, wavLength, vis_pkg);
 
 
 	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
@@ -137,7 +137,7 @@ int isFileMP3(void)
 	fp = popen(buffer, "r");
 	if(fp == NULL){
 		printf("Failed to run command\n");
-		return 2;
+		return 0;
 	}
 	if(fgets(filename, sizeof(buffer), fp) == NULL){
 		//handle error
@@ -161,17 +161,16 @@ int isFileMP3(void)
 			FILE_PATH = filename;
 			return 1;
 		}
-		else{
-			printf("Error converting file\n");
-			return 0;
-		}
+		printf("Error converting file\n");
+		return 0;
+		
 		
 	}
 	return -1;
 }
 
 void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
-							Visualizer_Pkg_ptr* vis_pkg)
+							Visualizer_Pkg_ptr vis_pkg)
 {
 
  	struct AudioData* AudioData_t = (struct AudioData*)
@@ -183,14 +182,14 @@ void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLengt
 	AudioData_t->currentLength = wavLength;
 
 	wavSpec->callback = MyAudioCallback;
-  	wavSpec->userdata = *vis_pkg;
+  	wavSpec->userdata = &(*vis_pkg);
 
 	
-	(*vis_pkg)->filename = FILE_PATH;
-	(*vis_pkg)->AudioData_ptr = AudioData_t;
-	(*vis_pkg)->wavSpec_ptr = wavSpec;
-	(*vis_pkg)->FFTW_Results_ptr = NULL;
-	(*vis_pkg)->GetAudioSample = NULL;
+	vis_pkg->filename = FILE_PATH;
+	vis_pkg->AudioData_ptr = AudioData_t;
+	vis_pkg->wavSpec_ptr = wavSpec;
+	vis_pkg->FFTW_Results_ptr = NULL;
+	vis_pkg->GetAudioSample = NULL;
 
   
  
@@ -205,9 +204,9 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	if(wavSpec->format != have.format)
 		wavSpec->format = have.format;
 	
-	int bitsize = (int)SDL_AUDIO_BITSIZE(wavSpec->format);
+	vis_pkg->bitsize = (int)SDL_AUDIO_BITSIZE(wavSpec->format);
 
-	switch(bitsize){
+	switch(vis_pkg->bitsize){
 		case 8: 
 			printf("8 bit data samples\n");
 			vis_pkg->GetAudioSample = Get8bitAudioSample;
@@ -225,29 +224,27 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 
     }
 
-	vis_pkg->bitsize = bitsize;
 
 	if(wavSpec->channels != have.channels)
 		wavSpec->channels = have.channels;
 	
-	int c = (int)wavSpec->channels;
-	switch(c){
+	switch(wavSpec->channels){
 		
 		case 1: 
-			printf("output channels: %d (mono)\n", c);
+			printf("output channels: %d (mono)\n", wavSpec->channels);
 			vis_pkg->setupDFT = setupDFTForMono;
 			break;
 		case 2:
-			printf("output channels: %d (stereo)\n", c);
+			printf("output channels: %d (stereo)\n", wavSpec->channels);
 			vis_pkg->setupDFT = setupDFTForStereo;
 			break;
 		case 4:
 			//vis_pkg->setupDFT =
-			printf("output channels: %d (quad)\n", c);
+			printf("output channels: %d (quad)\n", wavSpec->channels);
 			break;
 		case 6:
 			//vis_pkg->setupDFT =
-			printf("output channels: %d (5.1)\n", c);
+			printf("output channels: %d (5.1)\n", wavSpec->channels);
 			break;
 		default:
 			break;
@@ -261,7 +258,7 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	}
 
 	//size of samples in bytes?
-	int sizeof_packet =  bitsize / 8 ;
+	int sizeof_packet =  vis_pkg->bitsize / 8 ;
 	sizeof_packet *=wavSpec->channels;
 	sizeof_packet *= wavSpec->samples;
 
@@ -275,7 +272,7 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	//A frame can consist of N channels
 	int frame_size = wavSpec->samples; 
 	vis_pkg->frame_size = frame_size;
-	vis_pkg->total_frames = audio->wavLength/((bitsize/8) * wavSpec->channels);
+	vis_pkg->total_frames = audio->wavLength/((vis_pkg->bitsize/8) * wavSpec->channels);
 	//FFTW Results for each packet 
 	//
 
