@@ -44,8 +44,8 @@ struct FFTW_Results
 {
 	double* peakfreq;
 	double* peakpower;
-	double** peakmagMatrix;		//peakmagMatrix[channel][bucket]
-	char*** outputMatrix;		//outputMatrix[channel][bucket][outputstring]
+	double** peakmagMatrix;		
+	char*** outputMatrix;		
 	double phase;
 };
 
@@ -58,9 +58,8 @@ struct Visualizer_Pkg
 	int bitsize;
 
   	SDL_AudioDeviceID device;
-	SDL_AudioSpec* wavSpec_ptr;       //SDL data type to analyze WAV file.
-                         //A structure that contains the audio output format.
-	struct AudioData* AudioData_ptr;
+	SDL_AudioSpec* wavSpec_ptr;       
+    struct AudioData* AudioData_ptr;
 	struct FFTW_Results* FFTW_Results_ptr;
 	struct FFTWop* fftw_ptr;
 

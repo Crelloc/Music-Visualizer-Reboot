@@ -11,7 +11,9 @@ void setupDFTForSound(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 							int bytesRead)
 {
 	int bytewidth = vis_pkg_ptr->bitsize / 8;
-	int channels = GetSDL_AudioSpec(vis_pkg_ptr)->channels;
+	SDL_AudioSpec* wavSpec = GetSDL_AudioSpec(vis_pkg_ptr);
+	int channels = wavSpec->channels;
+	SDL_AudioFormat fmt = wavSpec->format;
 	int frames = bytesRead / (bytewidth * channels);
 	struct FFTWop* fftwop = GetFFTWop(vis_pkg_ptr);
 
@@ -23,8 +25,7 @@ void setupDFTForSound(Visualizer_Pkg_ptr vis_pkg_ptr, Uint8* buffer,
 	int count = 0;
 	while(count < frames){
 		for(int c=0; c< channels; ++c){
-			fftwop[c].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, 
-				vis_pkg_ptr->wavSpec_ptr->format);
+			fftwop[c].in[count][re] = vis_pkg_ptr->GetAudioSample(buffer, fmt);
 			fftwop[c].in[count][im] = 0.0;
 
 			buffer+=bytewidth;
@@ -48,6 +49,8 @@ int getFileSize(FILE *inFile)
 void processWAVFile(Uint32 wavLength, int buffer_size, 
 				Visualizer_Pkg_ptr vis_pkg_ptr)
 {
+	struct FFTWop* dft = GetFFTWop(vis_pkg_ptr);
+	int channels = GetSDL_AudioSpec(vis_pkg_ptr)->channels;
 
 	FILE* wavFile = fopen(vis_pkg_ptr->filename, "r");
     	int filesize = getFileSize(wavFile);
@@ -65,28 +68,24 @@ void processWAVFile(Uint32 wavLength, int buffer_size,
 		buffer_size/sizeof(buffer[0]), wavFile)) > 0 && keeprunning){
 
 		vis_pkg_ptr->setupDFT(vis_pkg_ptr, buffer, bytesRead);
-		for(int i=0; i < vis_pkg_ptr->wavSpec_ptr->channels; ++i){
+		for(int i=0; i < channels; ++i){
 
-			fftw_execute(vis_pkg_ptr->fftw_ptr[i].p);
-			analyze_FFTW_Results(vis_pkg_ptr, GetFFTWop(vis_pkg_ptr)[i], 
-							packet_index, i ,bytesRead);
-			fftw_destroy_plan(vis_pkg_ptr->fftw_ptr[i].p);
+			fftw_execute(dft[i].p);
+			analyze_FFTW_Results(vis_pkg_ptr, dft[i], 
+						packet_index, i ,bytesRead);
+			fftw_destroy_plan(dft[i].p);
 		}
 		packet_index++;		
 	} 
 
 	/*MEMORY MANAGEMENT*/
 	free(buffer);
-	for(int i=0; i<vis_pkg_ptr->wavSpec_ptr->channels; ++i){
+	for(int i=0; i<channels; ++i){
 
-		free(vis_pkg_ptr->fftw_ptr[i].in);
-		free(vis_pkg_ptr->fftw_ptr[i].out);
-
+		free(dft[i].in);
+		free(dft[i].out);
 	}
-	free(vis_pkg_ptr->fftw_ptr);
-	buffer = NULL;
-	vis_pkg_ptr->fftw_ptr = NULL;
-
+	free(dft);
 	fclose(wavFile);
 }
 
