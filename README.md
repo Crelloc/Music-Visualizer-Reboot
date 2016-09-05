@@ -22,7 +22,7 @@ Video Demonstration for LED music visualizer: https://www.youtube.com/watch?v=__
   - GDB: for debugging on Linux
   - gcc: C compiler for Linux
   
-#How To Build and Run:
+#How To Build and Run
 
 ##From terminal:
 
@@ -39,3 +39,9 @@ For example:
 1. ./visual.exe --file ~/Music/Classic.wav
 2. ./visual.exe -f ~/Music/Classic.wav
 ```
+
+#Brief overview about how the program works
+  - Analyzes the digital information in the wav file.
+  - Computes the fourier transformation every 'N' frames. Eg. computes the fourier transformation (FT) on 'N' L channel data and also computes the FT on 'N' R channel data.
+  - Gathers frequency and magnitude information from the results of the fourier transformation and records it by storing into an array.
+  - After analysis is finished the program will play music and display the corresponding information at the terminal.
