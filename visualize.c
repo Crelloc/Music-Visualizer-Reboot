@@ -23,12 +23,12 @@ char* FILE_PATH;
 
 /*FORWARD DECLARATIONS*/
 void InitializePackage(SDL_AudioSpec*, Uint8*, Uint32, Visualizer_Pkg_ptr);
-void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec);
+void InitializeVariables(struct Visualizer_Pkg*, SDL_AudioSpec, SDL_AudioDeviceID);
 int isFileMP3(void);
 extern FILE *popen( const char *command, const char *modes);
 extern int pclose(FILE *stream);
 
-/*TRAP FUNCTION*/
+/*TRAP FUNCTIONs*/
 void aborted(int sig){
 
 	printf("\nAborted by signal: %d\n", sig);
@@ -102,7 +102,7 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 		return 1;
 	}
 
-	InitializeVariables(vis_pkg, have);
+	InitializeVariables(vis_pkg, have, device);
 	processWAVFile(wavLength, have.size ,vis_pkg);
 
 	SDL_PauseAudioDevice(device, 0); //play song
@@ -176,15 +176,16 @@ void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLengt
 	wavSpec->callback = MyAudioCallback;
   	wavSpec->userdata = &(*vis_pkg);
 
-	
 	vis_pkg->filename = FILE_PATH;
 	vis_pkg->AudioData_ptr = AudioData_t;
 	vis_pkg->wavSpec_ptr = wavSpec;
-	vis_pkg->FFTW_Results_ptr = NULL;
-	vis_pkg->GetAudioSample = NULL;
+
 }
 
-void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
+void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have, SDL_AudioDeviceID device){
+
+	vis_pkg->device = device;
+	vis_pkg->setupDFT = setupDFTForSound;
 
 	SDL_AudioSpec* wavSpec = GetSDL_AudioSpec(vis_pkg);
 	//initialize function ptr
@@ -213,8 +214,6 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	if(wavSpec->channels != have.channels)
 		wavSpec->channels = have.channels;
 
-	vis_pkg->setupDFT = setupDFTForSound;
-	
 	if(wavSpec->samples != have.samples ){
 		printf("original sample size: %d\n"
 		"new sample size: %d\n", wavSpec->samples, have.samples);
@@ -279,5 +278,6 @@ void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have){
 	printf("FILE_PATH: %s\n", vis_pkg->filename);
 	printf("\nPress ENTER to continue:\n");
 	fflush(stdout);
+
 	while(getchar() != 0xa && keeprunning);
 }

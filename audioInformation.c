@@ -4,7 +4,19 @@ extern volatile int keeprunning;
 extern volatile int packet_pos;
 extern volatile int print_spectrum;
 extern const int BUCKETS;
+static int g_endprogram = 0;
 
+/*	Function ENDNOW called only when stuck in SDL's 
+ *	callback function: MyAudioCallback 
+ */
+
+void ENDNOW(Uint8* wavStart, SDL_AudioDeviceID device){
+
+	SDL_CloseAudioDevice(device);
+	SDL_FreeWAV(wavStart);
+	SDL_Quit();
+	exit(0);
+}
 
 void outputpowerspectrum(Visualizer_Pkg_ptr package)
 {
@@ -49,12 +61,19 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package)
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
 {
+
+
 	struct Visualizer_Pkg* package = (struct Visualizer_Pkg*)userdata;
 	struct AudioData* audio= GetAudioData(package);
 
-	if(audio->currentLength == 0)  
-	    return;
-	
+	if(audio->currentLength == 0){
+		if(g_endprogram)
+			ENDNOW(audio->wavStart, package->device);
+		SDL_memset(stream, 0, streamLength);  // just silence.
+		g_endprogram=1;
+		return;
+				
+	}
 	outputpowerspectrum(package);
 
 	Uint32 length = (Uint32)streamLength;
@@ -68,6 +87,7 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
         packet_pos++;
 }
 
+/*function Get8bitAudioSample hasnt been implemented*/
 double Get8bitAudioSample(Uint8* bytebuffer,SDL_AudioFormat format)
 {
 	
@@ -92,6 +112,7 @@ double Get16bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
 
 	return val/65535.0;
 }
+/*function Get32bitAudioSample hasnt been implemented*/
 
 double Get32bitAudioSample(Uint8* bytebuffer, SDL_AudioFormat format)
 {
