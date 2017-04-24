@@ -96,7 +96,7 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 		SDL_AUDIO_ALLOW_ANY_CHANGE);
 	
 	if(device == 0)	{
-	// TODO: Proper error handling
+		SDL_Log("Failed to open audio: %s", SDL_GetError());
 		return 1;
 	}
 
