@@ -23,7 +23,7 @@ void outputpowerspectrum(Visualizer_Pkg_ptr package)
 	int totchannels = GetSDL_AudioSpec(package)->channels;
 	struct FFTW_Results* res= GetFFTW_Results(package);
 	int thickness = 2;
-
+	
 	/*PRINT GRID*/
 	if(system("clear") < 0){}
 

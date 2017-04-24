@@ -40,10 +40,10 @@ void aborted(int sig){
 int main(int argc, char** argv)
 {
 
-	int opt;
+	int opt, flag;
 	struct option longopts[] = {
-		{"file",	1,	NULL,	'f'}, 
-		{0,0,0,0}	
+		{"file",1,  NULL,   'f'}, 
+		{0,     0,     0,     0}	
 	};
 
 	while((opt = getopt_long(argc, argv, ":f:", longopts, NULL)) != -1){
@@ -67,9 +67,7 @@ usage:			printf("usage %s [[--file|-f] \'PATH/TO/FILE\']\n"
 	if (optind != argc)
 		goto usage;
 
-	int flag = isFileMP3();
-
-	if(flag == 1)
+	if((flag = isFileMP3()) == 1)
 		printf("\nNew FILE_PATH: %s\n", FILE_PATH);
 	else if(flag == 0)
 		return 0;
