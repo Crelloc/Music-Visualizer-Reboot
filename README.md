@@ -13,7 +13,7 @@ Video Demonstration: https://www.youtube.com/watch?v=f6q0LmagfIU
   
 Video Demonstration for LED music visualizer: https://www.youtube.com/watch?v=___XwMbhV4k
 
-#Software
+# Software
 
   - SDL2: https://wiki.libsdl.org/Installation
   - FFTW: http://www.fftw.org/download.html
@@ -22,19 +22,19 @@ Video Demonstration for LED music visualizer: https://www.youtube.com/watch?v=__
   - GDB: for debugging on Linux
   - gcc: C compiler for Linux
   
-#How To Build and Run
+# How To Build and Run
 
-##From terminal:
+## From terminal:
 
 ```bash
 git clone https://github.com/Crelloc/Music-Visualizer-Reboot.git && cd Music-Visualizer-Reboot && make
 ```
-##Synopsis:
+## Synopsis:
 
 
 
 ```bash
-./visual.exe [--file|-f] /PATH/TO/WAV/AUDIO/FILE
+./visual.exe [-f] /PATH/TO/WAV/AUDIO/FILE
 
 For example:
 
@@ -42,7 +42,7 @@ For example:
 2. ./visual.exe -f ~/Music/Classic.wav
 ```
 Note: Supports only mp3 or wav audio files.
-#Brief overview about how the program works
+# Brief overview about how the program works
   - Analyzes the digital information in the wav file.
   - Computes the fourier transformation every 'N' frames. Eg. computes the fourier transformation (FT) on 'N' L channel data and also computes the FT on 'N' R channel data.
   - Gathers frequency and magnitude information from the results of the fourier transformation and records it by storing into an array.
