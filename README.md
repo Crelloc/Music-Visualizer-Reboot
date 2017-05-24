@@ -37,9 +37,7 @@ git clone https://github.com/Crelloc/Music-Visualizer-Reboot.git && cd Music-Vis
 ./visual.exe [-f] /PATH/TO/WAV/AUDIO/FILE
 
 For example:
-
-1. ./visual.exe --file ~/Music/Classic.wav
-2. ./visual.exe -f ~/Music/Classic.wav
+./visual.exe -f ~/Music/Classic.wav
 ```
 Note: Supports only mp3 or wav audio files.
 # Brief overview about how the program works
