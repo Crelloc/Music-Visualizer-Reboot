@@ -21,47 +21,6 @@ static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
 char* FILE_PATH;
 
-
-static int isFileMP3(void)
-{
-    FILE *fp;
-    int status;
-    char buffer[1024] = {0};
-    static char filename[1024] = {0};
-    snprintf(buffer, 1024, "find %s -printf \"%%f\"", FILE_PATH);
-    fp = popen(buffer, "r");
-    if(fp == NULL){
-        printf("Failed to run command\n");
-        return 0;
-    }
-    if(fgets(filename, sizeof(buffer), fp) == NULL){
-        //handle error
-    }
-    printf("%s\n", filename);
-    if(strstr(filename, ".mp3") != NULL){
-        int len = strlen(filename);
-        filename[len-3] = 'w';
-        filename[len-2] = 'a';
-        filename[len-1] = 'v';
-        printf("%s\n", filename);
-        snprintf(buffer, 1024, "avconv -i %s -f wav %s",
-            FILE_PATH, filename);
-        printf("%s\n", buffer);
-        if(system(buffer) < 0){}
-        fp = popen("echo $?","r");
-        if(fgets(buffer, sizeof(buffer), fp) == NULL){}
-        sscanf(buffer, "%d", &status);
-        pclose(fp);
-        if(status == 0){
-            FILE_PATH = filename;
-            return 1;
-        }
-        printf("Error converting file\n");
-        return 0;
-    }
-    return -1;
-}
-
 static void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
                             Visualizer_Pkg_ptr vis_pkg)
 {
@@ -152,7 +111,7 @@ static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec ha
         vis_pkg->FFTW_Results_ptr[i].peakpower = malloc(wavSpec->channels*sizeof(double));
 
         //for power spectrum (i.e. a double matrix) of
-            //N BUCKETS that represent a frequency range
+        //N BUCKETS that represent a frequency range
         vis_pkg->FFTW_Results_ptr[i].peakmagMatrix = malloc(wavSpec->channels*sizeof(double));
         for(ch = 0; ch < wavSpec->channels ; ++ch){
             vis_pkg->FFTW_Results_ptr[i].peakmagMatrix[ch] = malloc(BUCKETS*sizeof(double));
@@ -190,75 +149,69 @@ int main(int argc, char** argv)
 {
 
     int opt, flag;
+    SDL_AudioSpec wavSpec, have;
+    SDL_AudioDeviceID device;
+    Uint8* wavStart;
+    Uint32 wavLength;
+    struct Visualizer_Pkg* vis_pkg;
+    int length;
 
     while((opt = getopt(argc, argv, ":f:")) != -1){
+
         switch(opt){
-        case 'f':
-            FILE_PATH = optarg;
-            break;
-        case ':':
-            printf("option needs a value\n");
-            goto usage;
-        case '?':
-            printf("unknown option: %c\n", optopt);
-        default:
-usage:      printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
-            return 1;
+            case 'f':
+                FILE_PATH = optarg;
+                break;
+            case ':':
+                printf("option needs a value\n");
+                goto usage;
+            case '?':
+                printf("unknown option: %c\n", optopt);
+            default:
+usage:          printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
+                return 1;
         }
     }
-    if (optind != argc)
-        goto usage;
-    if((flag = isFileMP3()) == 1)
-        printf("\nNew FILE_PATH: %s\n", FILE_PATH);
-    else if(flag == 0)
-        return 0;
+    if (optind != argc) goto usage;
 
     (void) signal(SIGINT, aborted);
     (void) signal(SIGTSTP, aborted);
 
+    SDL_Init(SDL_INIT_AUDIO);
+    if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
     {
-        SDL_AudioSpec wavSpec, have;
-        SDL_AudioDeviceID device;
-        Uint8* wavStart;
-        Uint32 wavLength;
-        struct Visualizer_Pkg* vis_pkg;
-        int length;
-
-        SDL_Init(SDL_INIT_AUDIO);
-        if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
-        {
-            // TODO: Proper error handling
-            SDL_Log("Failed to load wav file: %s", SDL_GetError());
-            return 1;
-        }
-
-        vis_pkg = malloc(sizeof(struct Visualizer_Pkg));
-        InitializePackage(&wavSpec, wavStart, wavLength, vis_pkg);
-
-
-        device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
-                                     SDL_AUDIO_ALLOW_ANY_CHANGE);
-
-        if(device == 0){
-            SDL_Log("Failed to open audio: %s", SDL_GetError());
-            return 1;
-        }
-
-        InitializeVariables(vis_pkg, have, device);
-        processWAVFile(wavLength, have.size ,vis_pkg);
-
-        SDL_PauseAudioDevice(device, 0); //play song
-        length = GetAudioData(vis_pkg)->currentLength;
-
-        while(length > 0 && keeprunning){
-
-            SDL_Delay(100);
-        }
-
-        SDL_CloseAudioDevice(device);
-        SDL_FreeWAV(wavStart);
-        SDL_Quit();
+        // TODO: Proper error handling
+        SDL_Log("Failed to load wav file: %s", SDL_GetError());
+        return 1;
     }
+
+    vis_pkg = malloc(sizeof(struct Visualizer_Pkg));
+    InitializePackage(&wavSpec, wavStart, wavLength, vis_pkg);
+
+
+    device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
+                                    SDL_AUDIO_ALLOW_ANY_CHANGE);
+
+    if(device == 0){
+        SDL_Log("Failed to open audio: %s", SDL_GetError());
+        return 1;
+    }
+
+    InitializeVariables(vis_pkg, have, device);
+    processWAVFile(wavLength, have.size ,vis_pkg);
+
+    SDL_PauseAudioDevice(device, 0); //play song
+    length = GetAudioData(vis_pkg)->currentLength;
+
+    while(length > 0 && keeprunning){
+
+        SDL_Delay(100);
+    }
+
+    SDL_CloseAudioDevice(device);
+    SDL_FreeWAV(wavStart);
+    SDL_Quit();
+
 
     return 0;
 }
