@@ -209,6 +209,9 @@ usage:          printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
         SDL_Delay(100);
     }
 
+    /*Note: we are not freeing some variables that were malloced
+     we are going to let the OS do this for us after program has exited.
+     */
     SDL_CloseAudioDevice(device);
     SDL_FreeWAV(wavStart);
     SDL_Quit();
