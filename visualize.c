@@ -126,7 +126,7 @@ static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec ha
         vis_pkg->fftw_ptr[i].out = fftw_malloc(sizeof(fftw_complex) * frame_size);
         vis_pkg->fftw_ptr[i].index = i;
     }
-
+    printf("total packets: %d\n", totalpackets);
     printf("buffer size per packet [bytes]: %d\n", sizeof_packet);
     printf("number of frames per packet: %d\n", frame_size);
     printf("total frames: %d\n", vis_pkg->total_frames);
