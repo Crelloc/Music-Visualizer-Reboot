@@ -228,6 +228,7 @@ usage:      printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
         if(SDL_LoadWAV(FILE_PATH, &wavSpec, &wavStart, &wavLength) == NULL)
         {
             // TODO: Proper error handling
+            SDL_Log("Failed to load wav file: %s", SDL_GetError());
             return 1;
         }
 
