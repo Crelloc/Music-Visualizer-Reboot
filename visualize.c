@@ -148,7 +148,7 @@ static void aborted(int sig)
 int main(int argc, char** argv)
 {
 
-    int opt, flag;
+    int opt;
     SDL_AudioSpec wavSpec, have;
     SDL_AudioDeviceID device;
     Uint8* wavStart;
@@ -167,6 +167,7 @@ int main(int argc, char** argv)
                 goto usage;
             case '?':
                 printf("unknown option: %c\n", optopt);
+                goto usage;
             default:
 usage:          printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
                 return 1;
