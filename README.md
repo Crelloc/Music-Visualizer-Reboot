@@ -16,9 +16,9 @@ Video Demonstration for LED music visualizer: https://www.youtube.com/watch?v=__
 # Software
 
   - SDL2: https://wiki.libsdl.org/Installation
+      - Note: make to install sdl2, alsa, and pulseaudio development (or any development files that your systems uses to play sound ) files before installing SDL2.
   - FFTW: http://www.fftw.org/download.html
   - pkg-config: https://www.freedesktop.org/wiki/Software/pkg-config/
-  - avconv: https://libav.org/download/ if running debian based distro run "sudo apt-get install libav-tools"
   - GDB: for debugging on Linux
   - gcc: C compiler for Linux
   
@@ -39,7 +39,7 @@ git clone https://github.com/Crelloc/Music-Visualizer-Reboot.git && cd Music-Vis
 For example:
 ./visual.exe -f ~/Music/Classic.wav
 ```
-Note: Supports only mp3 or wav audio files.
+Note: Supports only wav audio files and make sure that the "/PATH/TO/WAV/AUDIO/FILE" doesn't have spaces in it.
 # Brief overview about how the program works
   - Analyzes the digital information in the wav file.
   - Computes the fourier transformation every 'N' frames. Eg. computes the fourier transformation (FT) on 'N' L channel data and also computes the FT on 'N' R channel data.
