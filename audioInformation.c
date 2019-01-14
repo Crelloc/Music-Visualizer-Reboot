@@ -11,7 +11,9 @@ callback function: MyAudioCallback
 */
 
 void ENDNOW(Uint8* wavStart, SDL_AudioDeviceID device){
-
+    /*Note: we are not freeing the variables in the FFTW_Results struct
+     we are going to let the OS do this for us after program has exited.
+     */
     SDL_CloseAudioDevice(device);
     SDL_FreeWAV(wavStart);
     SDL_Quit();
