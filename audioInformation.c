@@ -4,21 +4,6 @@ extern volatile int keeprunning;
 extern volatile int packet_pos;
 extern volatile int print_spectrum;
 extern const int BUCKETS;
-static int g_endprogram = 0;
-
-/*Function ENDNOW called only when stuck in SDL's
-callback function: MyAudioCallback
-*/
-
-void ENDNOW(Uint8* wavStart, SDL_AudioDeviceID device){
-    /*Note: we are not freeing the variables in the FFTW_Results struct
-     we are going to let the OS do this for us after program has exited.
-     */
-    SDL_CloseAudioDevice(device);
-    SDL_FreeWAV(wavStart);
-    SDL_Quit();
-    exit(0);
-}
 
 void outputpowerspectrum(Visualizer_Pkg_ptr package)
 {
@@ -68,12 +53,7 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
     Uint32 length;
 
     if(audio->currentLength == 0){
-        if(g_endprogram)
-            ENDNOW(audio->wavStart, package->device);
-        SDL_memset(stream, 0, streamLength);  // just silence.
-        g_endprogram=1;
         return;
-
     }
     outputpowerspectrum(package);
 

@@ -62,7 +62,7 @@ void processWAVFile(Uint32 wavLength, int buffer_size, Visualizer_Pkg_ptr vis_pk
 
         //Reading actual audio data
     while ((bytesRead = fread(buffer, sizeof buffer[0],
-        buffer_size/sizeof(buffer[0]), wavFile)) > 0 && keeprunning){
+        buffer_size/sizeof(buffer[0]), wavFile)) > 0){
 
         vis_pkg_ptr->setupDFT(vis_pkg_ptr, buffer, bytesRead);
         for(i = 0; i < channels; ++i){
@@ -89,7 +89,7 @@ void analyze_FFTW_Results(Visualizer_Pkg_ptr packet, struct FFTWop fftwop ,
                                         int packet_index, int ch,size_t bytesRead)
 {
 
-    double real, imag; 
+    double real, imag;
     double peakmax = 1.7E-308 ;
     int max_index = -1, i, j;
     double magnitude;

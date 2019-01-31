@@ -27,15 +27,15 @@ struct AudioData
 {
 	Uint8* currentPos;
 	Uint32 currentLength;
-	Uint8* wavStart;                                        
-  	Uint32 wavLength;                                      
+	Uint8* wavStart;
+  	Uint32 wavLength;
 };
 
 struct FFTWop
 {
-	fftw_complex *in;                
-	fftw_complex *out;                
-	fftw_plan p;                    
+	fftw_complex *in;
+	fftw_complex *out;
+	fftw_plan p;
 	int index;
 
 };
@@ -44,8 +44,8 @@ struct FFTW_Results
 {
 	double* peakfreq;
 	double* peakpower;
-	double** peakmagMatrix;		
-	char*** outputMatrix;		
+	double** peakmagMatrix;
+	char*** outputMatrix;
 	double phase;
 };
 
@@ -58,7 +58,7 @@ struct Visualizer_Pkg
 	int bitsize;
 
   	SDL_AudioDeviceID device;
-	SDL_AudioSpec* wavSpec_ptr;       
+	SDL_AudioSpec* wavSpec_ptr;
     struct AudioData* AudioData_ptr;
 	struct FFTW_Results* FFTW_Results_ptr;
 	struct FFTWop* fftw_ptr;
@@ -66,7 +66,7 @@ struct Visualizer_Pkg
 	
 	double (*GetAudioSample)(Uint8*, SDL_AudioFormat);
 	void (*setupDFT)(Visualizer_Pkg_ptr, Uint8*, int );
-}; 
+};
 
 
 

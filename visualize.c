@@ -12,6 +12,13 @@
 #include "audioInformation.h"
 #include "dataprocessing.h"
 
+#define EXIT_IF(EXP, device) \
+do { if (EXP){\
+        fprintf(stderr, "Failed to allocate memory!\n"); \
+        SDL_CloseAudioDevice(device); \
+        SDL_Quit(); \
+        exit(EXIT_FAILURE);} } \
+while (0)
 
 /*GLOBAL VARIABLES*/
 volatile int keeprunning = 1;
@@ -21,12 +28,16 @@ static volatile int time_to_exit = 0;
 const int BUCKETS = 5;
 char* FILE_PATH;
 
-static void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
+static int InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wavLength,
                             Visualizer_Pkg_ptr vis_pkg)
 {
-
+    int ret = 0;
     struct AudioData* AudioData_t = malloc(sizeof(struct AudioData));
-
+    if(!AudioData_t){
+        fprintf(stderr, "Failed to allocate memory\n");
+        ret = 1;
+        return ret;
+    }
     AudioData_t->currentPos = wavStart;
     AudioData_t->wavStart = wavStart;
     AudioData_t->wavLength = wavLength;
@@ -38,7 +49,7 @@ static void InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 w
     vis_pkg->filename = FILE_PATH;
     vis_pkg->AudioData_ptr = AudioData_t;
     vis_pkg->wavSpec_ptr = wavSpec;
-
+    return ret;
 }
 
 static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec have,
@@ -56,23 +67,6 @@ static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec ha
         wavSpec->format = have.format;
 
     vis_pkg->bitsize = (int)SDL_AUDIO_BITSIZE(wavSpec->format);
-
-    switch(vis_pkg->bitsize){
-        case 8:
-            printf("8 bit data samples\n");
-            vis_pkg->GetAudioSample = Get8bitAudioSample;
-            break;
-        case 16:
-            printf("16 bit data samples\n");
-            vis_pkg->GetAudioSample = Get16bitAudioSample;
-            break;
-        case 32:
-            vis_pkg->GetAudioSample = Get32bitAudioSample;
-            printf("32 bit data samples\n");
-            break;
-        default:
-        break;
-        }
 
     if(wavSpec->channels != have.channels)
         wavSpec->channels = have.channels;
@@ -104,27 +98,53 @@ static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec ha
     //
 
     vis_pkg->FFTW_Results_ptr = malloc(totalpackets * sizeof(struct FFTW_Results));
+    EXIT_IF(!vis_pkg->FFTW_Results_ptr, device);
 
     for (i = 0; i < totalpackets; ++i){
         //for peak results
         vis_pkg->FFTW_Results_ptr[i].peakfreq = malloc(wavSpec->channels*sizeof(double));
+
+        EXIT_IF(!vis_pkg->FFTW_Results_ptr[i].peakfreq, device);
+
         vis_pkg->FFTW_Results_ptr[i].peakpower = malloc(wavSpec->channels*sizeof(double));
 
+        EXIT_IF(!vis_pkg->FFTW_Results_ptr[i].peakpower, device);
         //for power spectrum (i.e. a double matrix) of
         //N BUCKETS that represent a frequency range
         vis_pkg->FFTW_Results_ptr[i].peakmagMatrix = malloc(wavSpec->channels*sizeof(double));
+        EXIT_IF(!vis_pkg->FFTW_Results_ptr[i].peakmagMatrix, device);
         for(ch = 0; ch < wavSpec->channels ; ++ch){
             vis_pkg->FFTW_Results_ptr[i].peakmagMatrix[ch] = malloc(BUCKETS*sizeof(double));
+            EXIT_IF(!vis_pkg->FFTW_Results_ptr[i].peakmagMatrix[ch], device);
         }
 
     }
     vis_pkg->fftw_ptr = malloc(wavSpec->channels*sizeof(struct FFTWop));
-
+    EXIT_IF(!vis_pkg->fftw_ptr, device);
     //allocating space for dft operations
     for(i=0; i<wavSpec->channels; ++i){
         vis_pkg->fftw_ptr[i].in = fftw_malloc(sizeof(fftw_complex) * frame_size);
+        EXIT_IF(!vis_pkg->fftw_ptr[i].in, device);
         vis_pkg->fftw_ptr[i].out = fftw_malloc(sizeof(fftw_complex) * frame_size);
+        EXIT_IF(!vis_pkg->fftw_ptr[i].out, device);
         vis_pkg->fftw_ptr[i].index = i;
+    }
+
+    switch(vis_pkg->bitsize){
+        case 8:
+            printf("8 bit data samples\n");
+            vis_pkg->GetAudioSample = Get8bitAudioSample;
+            break;
+        case 16:
+            printf("16 bit data samples\n");
+            vis_pkg->GetAudioSample = Get16bitAudioSample;
+            break;
+        case 32:
+            vis_pkg->GetAudioSample = Get32bitAudioSample;
+            printf("32 bit data samples\n");
+            break;
+        default:
+            break;
     }
     printf("total packets: %d\n", totalpackets);
     printf("buffer size per packet [bytes]: %d\n", sizeof_packet);
@@ -148,13 +168,12 @@ static void aborted(int sig)
 int main(int argc, char** argv)
 {
 
-    int opt;
+    int opt, i, j;
     SDL_AudioSpec wavSpec, have;
     SDL_AudioDeviceID device;
     Uint8* wavStart;
     Uint32 wavLength;
     struct Visualizer_Pkg* vis_pkg;
-    int length;
 
     while((opt = getopt(argc, argv, ":f:")) != -1){
 
@@ -187,8 +206,9 @@ usage:          printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
     }
 
     vis_pkg = malloc(sizeof(struct Visualizer_Pkg));
-    InitializePackage(&wavSpec, wavStart, wavLength, vis_pkg);
-
+    if(!vis_pkg) goto EXIT;
+    i = InitializePackage(&wavSpec, wavStart, wavLength, vis_pkg);
+    if(i) goto EXIT;
 
     device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, &have,
                                     SDL_AUDIO_ALLOW_ANY_CHANGE);
@@ -202,20 +222,26 @@ usage:          printf("usage %s [-f] \'PATH/TO/FILE\']\n",argv[0]);
     processWAVFile(wavLength, have.size ,vis_pkg);
 
     SDL_PauseAudioDevice(device, 0); //play song
-    length = GetAudioData(vis_pkg)->currentLength;
 
-    while(length > 0 && keeprunning){
+    while(GetAudioData(vis_pkg)->currentLength > 0 && keeprunning);
 
-        SDL_Delay(100);
+
+    //Free vis_pkg data
+    for(i=0; i<vis_pkg->total_packets; ++i){
+        free(vis_pkg->FFTW_Results_ptr[i].peakfreq);
+        free(vis_pkg->FFTW_Results_ptr[i].peakpower);
+        for(j=0; j<have.channels; ++j){
+            free(vis_pkg->FFTW_Results_ptr[i].peakmagMatrix[j]);
+        }
+        free(vis_pkg->FFTW_Results_ptr[i].peakmagMatrix);
     }
+    free(vis_pkg->FFTW_Results_ptr);
 
-    /*Note: we are not freeing some variables that were malloced
-     we are going to let the OS do this for us after program has exited.
-     */
     SDL_CloseAudioDevice(device);
+EXIT:
     SDL_FreeWAV(wavStart);
     SDL_Quit();
 
-
+    printf("goodbye.\n");
     return 0;
 }
