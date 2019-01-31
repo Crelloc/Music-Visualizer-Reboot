@@ -16,7 +16,7 @@ Video Demonstration for LED music visualizer: https://www.youtube.com/watch?v=__
 # Software
 
   - SDL2: https://wiki.libsdl.org/Installation
-      - Note: make to install sdl2, alsa, and pulseaudio development (or any development files that your systems uses to play sound ) files before installing SDL2.
+      - Note: make sure to install sdl2, alsa, and pulseaudio development (or any development files that your systems uses to play sound ) files before installing SDL2.
   - FFTW: http://www.fftw.org/download.html
   - pkg-config: https://www.freedesktop.org/wiki/Software/pkg-config/
   - GDB: for debugging on Linux
