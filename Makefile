@@ -9,7 +9,7 @@ ifeq ($(CC),gcc)
     CFLAGS += -Wjump-misses-init -Wlogical-op
 endif
 
-CFLAGS += -O2 -g -ggdb -std=c99 -fbuiltin
+CFLAGS += -O3 -g -ggdb -std=c99 -fbuiltin
 
 LDFLAGS=`pkg-config --libs fftw3 sdl2`
 LDFLAGS += -lm
