@@ -52,25 +52,24 @@ static int InitializePackage(SDL_AudioSpec* wavSpec,  Uint8* wavStart, Uint32 wa
     return ret;
 }
 
-static SDL_AudioSpec* Verify_Audio_Spec(SDL_AudioSpec* wavSpec, SDL_AudioSpec have)
+static void Verify_Audio_Spec(SDL_AudioSpec** wavSpec, SDL_AudioSpec have)
 {
 
-    if(wavSpec->format != have.format){
+    if((*wavSpec)->format != have.format){
         printf("original sample format: %d\n"
-        "new sample format: %d\n", wavSpec->format, have.format);
-        wavSpec->format = have.format;
+        "new sample format: %d\n", (*wavSpec)->format, have.format);
+        (*wavSpec)->format = have.format;
     }
-    if(wavSpec->channels != have.channels){
+    if((*wavSpec)->channels != have.channels){
         printf("original sample channels: %d\n"
-        "new sample channels: %d\n", wavSpec->channels, have.channels);
-        wavSpec->channels = have.channels;
+        "new sample channels: %d\n", (*wavSpec)->channels, have.channels);
+        (*wavSpec)->channels = have.channels;
     }
-    if(wavSpec->samples != have.samples ){
+    if((*wavSpec)->samples != have.samples ){
         printf("original sample size: %d\n"
-        "new sample size: %d\n", wavSpec->samples, have.samples);
-        wavSpec->samples = have.samples;
+        "new sample size: %d\n", (*wavSpec)->samples, have.samples);
+        (*wavSpec)->samples = have.samples;
     }
-    return wavSpec;
 }
 
 static struct FFTWop* allocate_FFTWop(int channels, int frame_size)
@@ -159,7 +158,8 @@ static void InitializeVariables(struct Visualizer_Pkg* vis_pkg, SDL_AudioSpec ha
 {
     SDL_AudioSpec* wavSpec;
 
-    wavSpec           = Verify_Audio_Spec(GetSDL_AudioSpec(vis_pkg), have);
+    wavSpec = GetSDL_AudioSpec(vis_pkg);
+    Verify_Audio_Spec(&wavSpec, have);
     vis_pkg->bitsize  = (int)SDL_AUDIO_BITSIZE(wavSpec->format);
     vis_pkg->GetAudioSample = set_audio_sample_function(vis_pkg->bitsize);
     assert(vis_pkg->GetAudioSample != NULL);
