@@ -5,7 +5,7 @@
 
 ![alt tag](https://github.com/Crelloc/Music-Visualizer-Reboot/blob/master/rebooted.gif)
 
-Video Demonstration: https://www.youtube.com/watch?v=f6q0LmagfIU
+Video Demonstration: https://www.youtube.com/watch?v=YaeXZrTrX-Y&t=790s
 
 # Motivation
 
