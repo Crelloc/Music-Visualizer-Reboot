@@ -1,0 +1,14 @@
+version: '3'
+services:
+  music-visualizer:
+    build:
+      context: ./
+      args:
+        - NO_CACHE=--no-cache
+    image: music-visualizer:0.0.1
+    devices:
+      - /dev/snd
+    stdin_open: true
+    tty: true
+    restart: "no"
+
