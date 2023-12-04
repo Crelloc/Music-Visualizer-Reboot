@@ -6,8 +6,9 @@ services:
       args:
         - NO_CACHE=--no-cache
     image: music-visualizer:0.0.1
+    container_name: visualizer-container
     volumes:
-      - /home/crelloc/Music:/opt/visualizer/Music
+      - "${ENV_MUSIC_PATH}:/opt/visualizer/Music"
     devices:
       - /dev/snd
     stdin_open: true
