@@ -1,17 +1,17 @@
 version: '3'
 services:
-  music-visualizer:
+  visualizer-service:
     build:
       context: ./
       args:
         - NO_CACHE=--no-cache
     image: music-visualizer:0.0.1
     volumes:
-      - "/home/${USER}/Music:/visualizer/Music"
+      - /home/crelloc/Music:/opt/visualizer/Music
     devices:
       - /dev/snd
     stdin_open: true
-    command: ["bash", "-it"]
+    command: /bin/bash
     tty: true
     restart: "no"
 
