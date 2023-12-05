@@ -63,8 +63,7 @@ ffmpeg -i Music/song.mp3 Music/song.wav
 ## Build and run docker image:
 
 ```bash
-sudo docker compose --env-file ./.env -f ./docker-compose.yml build --no-cache && sudo docker compose -f ./docker-compose.yml --env-file ./.env up --force-recreate --remove-orphans -d
-
+sudo docker compose build --no-cache && sudo docker compose up --force-recreate --remove-orphans -d
 ```
 ## Log into the container:
 
@@ -88,21 +87,35 @@ Note: Supports only wav audio files and make sure that the "/PATH/TO/WAV/AUDIO/F
 ## Stop container:
 
 ```bash
-docker docker stop visualizer-container
+sudo docker stop visualizer-container
 
 ```
 
-## Troubleshooting audio after playing music through container:
+## Troubleshooting audio not playing:
 
-Docker likes to be greedy when i comes to audio devices, so if your audio
-on the host machine doesn't work, like with Youtube, after using the docker app, then
-you can restart your audio service. etc
+Check for the correct path of audio socket on your system:
 
 ```bash
-systemctl --user restart pipewire.service; #for pipewire
-systemctl --user restart pulseaudio.service; #for pulseaudio
+pactl info | grep '^Server String';
 
 ```
+
+and add the correct path in [docker-compose.yml](docker-compose.yml)
+
+
+```yaml
+...
+volumes:
+    ...
+  - /run/user/1000/pulse/native:/tmp/pulse/native
+...
+
+```
+
+Other troubleshooting references:
+- https://gist.github.com/the-spyke/2de98b22ff4f978ebf0650c90e82027e?permalink_comment_id=3976309
+- https://stackoverflow.com/questions/28985714/run-apps-using-audio-in-a-docker-container/75775875#75775875
+- https://leimao.github.io/blog/Docker-Container-Audio/
 
 # How To Build and Run without docker
 
@@ -152,19 +165,10 @@ sudo make install
 
 
 ```
-## Go back to project directory
+## Go back to project directory and reate executable for visualize.c
 
 ```bash
-cd ..
-
-
-```
-
-## Create executable for visualize.c
-
-```bash
-
-make
+cd .. && make
 
 ```
 
