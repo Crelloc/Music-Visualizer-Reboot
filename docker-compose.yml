@@ -5,10 +5,13 @@ services:
       context: ./
       args:
         - NO_CACHE=--no-cache
+    environment:
+      - XDG_RUNTIME_DIR=/tmp
     image: music-visualizer:0.0.1
     container_name: visualizer-container
     volumes:
       - "${ENV_MUSIC_PATH}:/opt/visualizer/Music"
+      - /run/user/1000/pulse/native:/tmp/pulse/native
     devices:
       - /dev/snd
     stdin_open: true
