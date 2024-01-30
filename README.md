@@ -7,6 +7,9 @@
 
 Video Demonstration: https://www.youtube.com/watch?v=YaeXZrTrX-Y&t=790s
 
+For simpler version of this code, checkout:
+https://github.com/Crelloc/terminal-music-visualizer
+
 # Motivation
 
   - Was planning to design and build a LED music visualizer as an Arduino project but wanted a better understanding of how music visualization software actually works.
